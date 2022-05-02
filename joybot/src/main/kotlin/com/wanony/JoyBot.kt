@@ -19,7 +19,7 @@ class JoyBot : ListenerAdapter() {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     val token = getProperty<String>("discordAPIToken")
     val jda = JDABuilder.createLight(token, EnumSet.of(GatewayIntent.GUILD_MEMBERS))
         .addEventListeners(JoyBot())
