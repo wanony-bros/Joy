@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Groups : IntIdTable() {
     val romanName = varchar("romanName", 255)
-    val addedBy = reference("addedBy", Users.id)
+    val addedBy = long("addedBy")
 }
 
 class Group(id: EntityID<Int>): IntEntity(id) {

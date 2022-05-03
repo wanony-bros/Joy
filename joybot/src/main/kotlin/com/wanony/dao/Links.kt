@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Links : IntIdTable() {
     val link = varchar("link",255)
-    val addedBy = reference("addedBy", Users)
+    val addedBy = long("addedBy")
 }
 
 class Link(id: EntityID<Int>): IntEntity(id) {
