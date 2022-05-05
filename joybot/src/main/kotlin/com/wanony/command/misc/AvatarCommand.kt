@@ -21,7 +21,8 @@ class AvatarCommand : JoyBotCommand {
             setAuthor(member?.effectiveName ?: user.name)
             setFooter("requested by ${event.user.asTag}", event.user.effectiveAvatarUrl)
             // TODO: Use Member#getEffectiveAvatar to use a bigger image
-            setImage(member?.effectiveAvatarUrl ?: user.effectiveAvatarUrl)
+            val url = member?.effectiveAvatarUrl ?: user.effectiveAvatarUrl
+            setImage(url.substringBeforeLast("?") + "?size=512")
         }.build()
         event.replyEmbeds(embed).queue()
     }
