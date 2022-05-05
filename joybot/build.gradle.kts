@@ -58,5 +58,5 @@ tasks.register<JavaExec>("createDatabase") {
 }
 
 application {
-    mainClass.set("JoyBotKt")
+    mainClass.set("com.wanony.JoyBotKt")
 }
