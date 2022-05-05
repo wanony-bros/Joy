@@ -1,4 +1,4 @@
-package com.wanony.command.gyfs
+package com.wanony.command.gfys
 
 import com.wanony.DB
 import com.wanony.Theme
