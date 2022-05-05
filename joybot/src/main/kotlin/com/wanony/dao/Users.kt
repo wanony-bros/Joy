@@ -9,6 +9,7 @@ object Users : IdTable<Long>() {
     override val id = long("id").entityId()
     val xp = integer("xp").default(0)
     val contribution = integer("contribution").default(0)
+    val admin = bool("admin").default(false)
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -16,4 +17,5 @@ class User(id: EntityID<Long>): LongEntity(id) {
     companion object : LongEntityClass<User>(Users)
     var xp by Users.xp
     var contribution by Users.contribution
+    var admin by Users.admin
 }

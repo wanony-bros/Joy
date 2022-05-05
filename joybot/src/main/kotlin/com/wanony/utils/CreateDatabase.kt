@@ -45,5 +45,14 @@ fun main() {
         SchemaUtils.createDatabase(name)
         SchemaUtils.setSchema(Schema("joy"))
         SchemaUtils.createMissingTablesAndColumns(*tables.toTypedArray())
+
+        Users.insert {
+            it[id] = getProperty<Long>("slvinId")
+            it[admin] = true
+        }
+        Users.insert {
+            it[id] = getProperty<Long>("wanonyId")
+            it[admin] = true
+        }
     }
 }
