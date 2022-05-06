@@ -7,14 +7,14 @@ import com.wanony.command.misc.SuggestCommand
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 
-val allCommands : Map<String, JoyCommand> = listOf(
+val allCommands : Map<String, JoyBotCommand> = listOf(
     AvatarCommand(),
     SuggestCommand(),
     AddLinkCommand(),
     RandomLinkCommand(),
 ).associateBy { it.name }
 
-interface JoyCommand {
+interface JoyBotCommand {
     val name: String
     val commandData: CommandData
 
