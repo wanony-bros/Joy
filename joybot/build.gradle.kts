@@ -57,6 +57,12 @@ tasks.register<JavaExec>("createDatabase") {
     classpath = sourceSets["main"].runtimeClasspath
 }
 
+tasks.register<JavaExec>("setupProperties") {
+    mainClass.set("com.wanony.utils.SetupProperties")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardInput = System.`in`
+}
+
 application {
     mainClass.set("com.wanony.JoyBotKt")
 }
