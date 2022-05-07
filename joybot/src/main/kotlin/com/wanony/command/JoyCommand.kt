@@ -2,7 +2,6 @@ package com.wanony.command
 
 import com.wanony.command.gfys.AddLinkCommand
 import com.wanony.command.gfys.RandomLinkCommand
-import com.wanony.command.manage.ManageCommand
 import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.SuggestCommand
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -12,7 +11,6 @@ val allCommands : Map<String, JoyCommand> = listOf(
     AvatarCommand(),
     SuggestCommand(),
     AddLinkCommand(),
-    ManageCommand(),
     RandomLinkCommand(),
 ).associateBy { it.name }
 
