@@ -1,7 +1,7 @@
 package com.wanony.command.misc
 
 import com.wanony.Theme
-import com.wanony.command.JoyBotCommand
+import com.wanony.command.JoyCommand
 import com.wanony.getProperty
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import java.awt.Color
 
-class SuggestCommand : JoyBotCommand {
+class SuggestCommand : JoyCommand {
     override val name: String = "suggest"
     override val commandData: CommandData =
         Commands.slash(name, "Suggest a new feature for Joy")

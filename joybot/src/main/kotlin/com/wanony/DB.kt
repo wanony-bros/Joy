@@ -5,15 +5,28 @@ import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.sql.DataSource
 
 object DB {
+    private val dataBaseName: String = getProperty("databaseName")
+
     fun getConnection() = Database.connect(db).also {
-        transaction {
-            SchemaUtils.setSchema(Schema("joy"))
+        org.jetbrains.exposed.sql.transactions.transaction {
+            SchemaUtils.setSchema(Schema(dataBaseName))
         }
     }
+
+    fun <T> transaction(statement: Transaction.() -> T) {
+        Database.connect(db).also {
+            org.jetbrains.exposed.sql.transactions.transaction {
+                SchemaUtils.setSchema(Schema(dataBaseName))
+                statement()
+            }
+        }
+    }
+
 
     private var db: DataSource = connect()
 

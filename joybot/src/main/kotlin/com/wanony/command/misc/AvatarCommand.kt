@@ -1,13 +1,13 @@
 package com.wanony.command.misc
 
-import com.wanony.command.JoyBotCommand
+import com.wanony.command.JoyCommand
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
-class AvatarCommand : JoyBotCommand {
+class AvatarCommand : JoyCommand {
     override val name: String = "avatar"
     override val commandData: CommandData =
         Commands.slash(name, "See a larger version of a user avatar")

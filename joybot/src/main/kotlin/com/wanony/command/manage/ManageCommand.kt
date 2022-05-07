@@ -1,31 +1,137 @@
 package com.wanony.command.manage
 
-import com.wanony.command.JoyBotCommand
+import com.wanony.DB
+import com.wanony.Theme
+import com.wanony.command.JoyCommand
+import com.wanony.dao.Tag
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData
 
-class ManageCommand : JoyBotCommand {
+private const val TAG_GROUP_NAME = "tag"
+private const val IDOL_GROUP_NAME = "idol"
+private const val GROUP_GROUP_NAME = "group"
+private const val LINK_GROUP_NAME = "link"
+
+private const val ADD_OPERATION_NAME = "add"
+private const val RENAME_OPERATION_NAME = "rename"
+private const val REMOVE_OPERATION_NAME = "remove"
+
+class ManageCommand : JoyCommand {
     override val name: String = "manage"
     override val commandData: CommandData =
         Commands.slash(name, "Manage Joy's content").addSubcommandGroups(
-            SubcommandGroupData("tag", "Manage tags").addSubcommands(
-
+            SubcommandGroupData(TAG_GROUP_NAME, "Manage tags").addSubcommands(
+                SubcommandData(ADD_OPERATION_NAME, "Add a tag")
+                    .addOption(OptionType.STRING, "name", "The tag to add", true),
+                SubcommandData(RENAME_OPERATION_NAME, "Rename a tag")
+                    .addOption(OptionType.STRING, "current", "The current name of the tag to change", true)
+                    .addOption(OptionType.STRING, "new", "The new name of the tag", true),
+                SubcommandData(REMOVE_OPERATION_NAME, "Remove a tag")
+                    .addOption(OptionType.STRING, "name", "The tag to remove", true)
             ),
-            SubcommandGroupData("member", "Manage members").addSubcommands(
-
+            SubcommandGroupData(IDOL_GROUP_NAME, "Manage idols").addSubcommands(
+                SubcommandData(ADD_OPERATION_NAME, "Add a idol")
+                    .addOption(OptionType.STRING, "name", "The idol to add", true)
+                    .addOption(OptionType.STRING, "group", "The group to add the idol to", true),
+                SubcommandData(RENAME_OPERATION_NAME, "Rename a idol")
+                    .addOption(OptionType.STRING, "current", "The current name of the idol to change", true)
+                    .addOption(OptionType.STRING, "new", "The new name of the idol", true),
+                SubcommandData(REMOVE_OPERATION_NAME, "Remove a idol")
+                    .addOption(OptionType.STRING, "idol", "The idol to remove", true)
             ),
-            SubcommandGroupData("groups", "Manage groups").addSubcommands(
-
+            SubcommandGroupData(GROUP_GROUP_NAME, "Manage groups").addSubcommands(
+                SubcommandData(ADD_OPERATION_NAME, "Add a group")
+                    .addOption(OptionType.STRING, "name", "The group to add", true),
+                SubcommandData(RENAME_OPERATION_NAME, "Rename a group")
+                    .addOption(OptionType.STRING, "current", "The current name of the group to change", true)
+                    .addOption(OptionType.STRING, "new", "The new name of the group", true),
+                SubcommandData(REMOVE_OPERATION_NAME, "Remove a group")
+                    .addOption(OptionType.STRING, "name", "The group to remove", true)
             ),
-            SubcommandGroupData("links", "Manage links").addSubcommands(
-
+            SubcommandGroupData(LINK_GROUP_NAME, "Manage links").addSubcommands(
+                SubcommandData("remove", "Remove a link")
+                    .addOption(OptionType.STRING, "name", "The link to remove", true)
             )
         )
 
     override fun execute(event: SlashCommandInteractionEvent) {
-        TODO("Not yet implemented")
+        val subcommandGroup = event.subcommandGroup
+        val subcommandName = event.subcommandName
+        when(subcommandGroup) {
+            TAG_GROUP_NAME -> when(subcommandName) {
+                ADD_OPERATION_NAME -> addTag(event)
+                RENAME_OPERATION_NAME -> renameTag(event)
+                REMOVE_OPERATION_NAME -> removeTag(event)
+                else -> throw java.lang.RuntimeException("WTF DISCORD????")
+            }
+            IDOL_GROUP_NAME -> when(subcommandName) {
+                ADD_OPERATION_NAME -> addIdol(event)
+                RENAME_OPERATION_NAME -> renameIdol(event)
+                REMOVE_OPERATION_NAME -> removeIdol(event)
+                else -> throw java.lang.RuntimeException("WTF DISCORD????")
+            }
+            GROUP_GROUP_NAME -> when(subcommandName) {
+                ADD_OPERATION_NAME -> addGroup(event)
+                RENAME_OPERATION_NAME -> renameGroup(event)
+                REMOVE_OPERATION_NAME -> removeGroup(event)
+                else -> throw RuntimeException("WTF DISCORD????")
+            }
+            LINK_GROUP_NAME -> when(subcommandName) {
+                REMOVE_OPERATION_NAME -> removeLink(event)
+                else -> throw RuntimeException("WTF DISCORD????")
+            }
+        }
+    }
+
+    private fun addTag(event: SlashCommandInteractionEvent) {
+        val name = event.getOption("name")!!.asString
+        DB.transaction {
+            Tag.new {
+                this.tagName = name
+                this.addedBy = event.user.idLong
+            }
+        }
+
+        event.replyEmbeds(Theme.successEmbed("Added tag: $name").build()).queue()
+    }
+
+    fun renameTag(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun removeTag(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun addIdol(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun renameIdol(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun removeIdol(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun addGroup(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun renameGroup(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun removeGroup(event: SlashCommandInteractionEvent) {
+
+    }
+
+    fun removeLink(event: SlashCommandInteractionEvent) {
+
     }
 }

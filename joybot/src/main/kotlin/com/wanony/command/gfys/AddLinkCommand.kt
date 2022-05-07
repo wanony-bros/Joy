@@ -2,7 +2,7 @@ package com.wanony.command.gfys
 
 import com.wanony.DB
 import com.wanony.Theme
-import com.wanony.command.JoyBotCommand
+import com.wanony.command.JoyCommand
 import com.wanony.dao.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AddLinkCommand : JoyBotCommand {
+class AddLinkCommand : JoyCommand {
     override val name: String = "addlink"
     override val commandData: CommandData =
         Commands.slash(name, "Add a link and contribute to Joy's database!")

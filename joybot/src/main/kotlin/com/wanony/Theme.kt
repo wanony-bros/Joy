@@ -11,5 +11,11 @@ class Theme {
             setDescription(message)
             setColor(Color.RED)
         }
+
+        fun successEmbed(message: String) = EmbedBuilder().apply {
+            setTitle("Success!")
+            setDescription(message)
+            setColor(Color.GREEN)
+        }
     }
 }
