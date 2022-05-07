@@ -1,13 +1,13 @@
 package com.wanony.command.gfys
 
 import com.wanony.Theme
-import com.wanony.command.JoyBotCommand
+import com.wanony.command.JoyCommand
 import com.wanony.command.gfys.links.LinkProvider
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
-class RandomLinkCommand : JoyBotCommand {
+class RandomLinkCommand : JoyCommand {
     override val name: String = "random"
     override val commandData: CommandData =
         Commands.slash(name, "Get a random link from Joy's database!")
