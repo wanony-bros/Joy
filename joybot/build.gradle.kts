@@ -18,6 +18,17 @@ repositories {
     mavenCentral()
 }
 
+val webscrape = sourceSets.create("webscrape") {
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
+    compileClasspath += sourceSets["main"].compileClasspath
+    runtimeClasspath += sourceSets["main"].runtimeClasspath
+}
+
+val webscrapeImplementation = configurations.getting {
+    extendsFrom(configurations["implementation"])
+}
+
 dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.0-alpha7")
     implementation("mysql:mysql-connector-java:8.0.28")
@@ -38,6 +49,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+
+    add("webscrapeImplementation", "org.jsoup:jsoup:1.14.3")
 
     testImplementation(kotlin("test"))
 }
@@ -61,6 +74,11 @@ tasks.register<JavaExec>("setupProperties") {
     mainClass.set("com.wanony.utils.SetupProperties")
     classpath = sourceSets["main"].runtimeClasspath
     standardInput = System.`in`
+}
+
+tasks.register<JavaExec>("populateDatabase") {
+    mainClass.set("com.wanony.utils.PopulateDatabase")
+    classpath = sourceSets["webscrape"].runtimeClasspath
 }
 
 application {
