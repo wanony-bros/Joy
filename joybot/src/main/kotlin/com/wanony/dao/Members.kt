@@ -19,6 +19,6 @@ object Members : IntIdTable() {
 class Member(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Member>(Members)
     var groupId by Group referencedOn Members.groupId
-    val romanName by Members.romanName
-    val addedBy by Members.addedBy
+    var romanName by Members.romanName
+    var addedBy by Members.addedBy
 }

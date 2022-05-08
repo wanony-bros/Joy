@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData
+import org.jetbrains.exposed.sql.and
 
 private const val TAG_GROUP_NAME = "tag"
 private const val IDOL_GROUP_NAME = "idol"
@@ -36,7 +37,7 @@ class ManageCommand : JoyCommand {
             SubcommandGroupData(IDOL_GROUP_NAME, "Manage idols").addSubcommands(
                 SubcommandData(ADD_OPERATION_NAME, "Add a idol")
                     .addOption(OptionType.STRING, "group", "The group to add the idol to", true, true)
-                    .addOption(OptionType.STRING, "name", "The idol to add", true, true),
+                    .addOption(OptionType.STRING, "name", "The idol to add", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a idol")
                     .addOption(OptionType.STRING, "group", "The group the idol belongs to", true, true)
                     .addOption(OptionType.STRING, "idol", "The current name of the idol to change", true, true)
@@ -156,16 +157,83 @@ class ManageCommand : JoyCommand {
         event.replyEmbeds(builder.build()).queue()
     }
 
-    fun addIdol(event: SlashCommandInteractionEvent) {
+    private fun addIdol(event: SlashCommandInteractionEvent) {
+        val group = event.getOption("group")!!.asString
+        val name = event.getOption("name")!!.asString
+        val error: String? = DB.transaction {
+            val grp = Group.find { Groups.romanName eq group }.firstOrNull()
+                ?: return@transaction "Group `$group` doesn't exist."
 
+            val member = Member.find { (Members.groupId eq grp.id) and (Members.romanName eq name) }
+            if (member.firstOrNull() != null) {
+                return@transaction "Idol `$name` of `$group` already exists"
+            }
+
+            Member.new {
+                this.romanName = name
+                this.groupId = grp
+                this.addedBy = event.user.idLong
+            }
+
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Added idol `$name` to group `$group`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
-    fun renameIdol(event: SlashCommandInteractionEvent) {
+    private fun renameIdol(event: SlashCommandInteractionEvent) {
+        val group = event.getOption("group")!!.asString
+        val name = event.getOption("idol")!!.asString
+        val new = event.getOption("name")!!.asString
+        val error: String? = DB.transaction {
+            val grp = Group.find { Groups.romanName eq group }.firstOrNull()
+                ?: return@transaction "Group `$group` doesn't exist."
 
+            val member = Member.find { (Members.groupId eq grp.id) and (Members.romanName eq name) }.firstOrNull()
+                ?: return@transaction "Idol `$name` of `$group` doesn't exist"
+
+            val newMember = Member.find { (Members.groupId eq grp.id) and (Members.romanName eq new) }.firstOrNull()
+            if (newMember != null) {
+                return@transaction "Idol `$new` of `$group` already exists"
+            }
+
+            member.romanName = new
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Renamed idol `$name` or group `$group` to `$new`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
-    fun removeIdol(event: SlashCommandInteractionEvent) {
+    private fun removeIdol(event: SlashCommandInteractionEvent) {
+        val group = event.getOption("group")!!.asString
+        val name = event.getOption("idol")!!.asString
+        val error: String? = DB.transaction {
+            val grp = Group.find { Groups.romanName eq group }.firstOrNull()
+                ?: return@transaction "Group `$group` doesn't exist."
 
+            val member = Member.find { (Members.groupId eq grp.id) and (Members.romanName eq name) }.firstOrNull()
+                ?: return@transaction "Idol `$name` of `$group` doesn't exist."
+
+            member.delete()
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Deleted idol `$name` from group `$group`.")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
     private fun addGroup(event: SlashCommandInteractionEvent) {
