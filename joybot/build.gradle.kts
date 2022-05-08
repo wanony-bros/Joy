@@ -20,9 +20,9 @@ repositories {
 
 dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.0-alpha7")
-    implementation("mysql:mysql-connector-java:8.0.29")
+    implementation("mysql:mysql-connector-java:8.0.28")
     implementation("net.dv8tion:JDA:5.0.0-alpha.11")
-    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.zaxxer:HikariCP:4.0.3")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 
