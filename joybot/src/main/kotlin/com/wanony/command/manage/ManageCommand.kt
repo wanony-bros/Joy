@@ -91,6 +91,11 @@ class ManageCommand : JoyCommand {
 
     private fun addTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
+        if (name.contains(' ')) {
+            event.replyEmbeds(Theme.errorEmbed("Tags must not contain spaces.").build()).queue()
+            return
+        }
+
         val error: String? = DB.transaction {
             val tag = Tag.find { Tags.tagName eq name }.firstOrNull()
             if (tag != null) {
