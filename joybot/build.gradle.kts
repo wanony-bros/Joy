@@ -53,6 +53,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
     add("webscrapeImplementation", "org.jsoup:jsoup:1.14.3")
+    add("webscrapeImplementation", "org.seleniumhq.selenium:selenium-java:2.41.0")
+    add("webscrapeImplementation", "org.seleniumhq.selenium:selenium-firefox-driver:4.1.4")
 
     testImplementation(kotlin("test"))
 }

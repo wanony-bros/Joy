@@ -56,12 +56,12 @@ class InformationCommand : JoyCommand{
     }
 
     private fun getMembersFromGroupDB(group: String): String = DB.transaction {
-        (Groups.innerJoin(Members).innerJoin(LinkMembers)).slice(Members.romanName, LinkMembers.memberId.count())
+        (Groups.innerJoin(Members).innerJoin(LinkMembers)).slice(Members.romanStageName, LinkMembers.memberId.count())
             .select { (Groups.romanName eq group) and
                     (Members.groupId eq Groups.id) and
                     (LinkMembers.memberId eq Members.id) }.groupBy(Members.id)
-            .toList().sortedBy { Members.romanName }.joinToString("\n") {
-                "`" + it[Members.romanName] +
+            .toList().sortedBy { Members.romanStageName }.joinToString("\n") {
+                "`" + it[Members.romanStageName] +
                     " ".repeat(26 - it[LinkMembers.memberId.count()].toString().length) +
                     it[LinkMembers.memberId.count()] + "`"
             }

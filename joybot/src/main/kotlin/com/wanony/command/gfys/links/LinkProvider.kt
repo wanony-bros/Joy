@@ -65,7 +65,7 @@ object LinkProvider {
             query.andWhere { Groups.romanName eq group }
         }
         if (member != null) {
-            query.andWhere { Members.romanName eq member }
+            query.andWhere { Members.romanStageName eq member }
         }
 
         val result = query.orderBy(Random()).limit(1).firstOrNull()
@@ -73,7 +73,7 @@ object LinkProvider {
             AnnotatedLink(
                 it[Links.link],
                 it[Groups.romanName],
-                it[Members.romanName]
+                it[Members.romanStageName]
             )
         }
     }

@@ -158,7 +158,7 @@ class ManageCommand : JoyCommand {
     }
 
     private fun addIdol(event: SlashCommandInteractionEvent) {
-        val group = event.getOption("group")!!.asString
+        /*val group = event.getOption("group")!!.asString
         val name = event.getOption("name")!!.asString
         val error: String? = DB.transaction {
             val grp = Group.find { Groups.romanName eq group }.firstOrNull()
@@ -183,11 +183,11 @@ class ManageCommand : JoyCommand {
         else
             Theme.successEmbed("Added idol `$name` to group `$group`")
 
-        event.replyEmbeds(builder.build()).queue()
+        event.replyEmbeds(builder.build()).queue()*/
     }
 
     private fun renameIdol(event: SlashCommandInteractionEvent) {
-        val group = event.getOption("group")!!.asString
+        /*val group = event.getOption("group")!!.asString
         val name = event.getOption("idol")!!.asString
         val new = event.getOption("name")!!.asString
         val error: String? = DB.transaction {
@@ -202,7 +202,7 @@ class ManageCommand : JoyCommand {
                 return@transaction "Idol `$new` of `$group` already exists"
             }
 
-            member.romanName = new
+            member.romanStageName = new
             null
         }
 
@@ -211,7 +211,7 @@ class ManageCommand : JoyCommand {
         else
             Theme.successEmbed("Renamed idol `$name` or group `$group` to `$new`")
 
-        event.replyEmbeds(builder.build()).queue()
+        event.replyEmbeds(builder.build()).queue()*/
     }
 
     private fun removeIdol(event: SlashCommandInteractionEvent) {
@@ -221,7 +221,7 @@ class ManageCommand : JoyCommand {
             val grp = Group.find { Groups.romanName eq group }.firstOrNull()
                 ?: return@transaction "Group `$group` doesn't exist."
 
-            val member = Member.find { (Members.groupId eq grp.id) and (Members.romanName eq name) }.firstOrNull()
+            val member = Member.find { (Members.groupId eq grp.id) and (Members.romanStageName eq name) }.firstOrNull()
                 ?: return@transaction "Idol `$name` of `$group` doesn't exist."
 
             member.delete()

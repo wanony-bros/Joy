@@ -89,7 +89,7 @@ class AddLinkCommand : JoyCommand {
                 rollback()
                 return@transaction
             }
-            val member = Member.find { (Members.romanName eq idol) and (Members.id eq group.first().id) }
+            val member = Member.find { (Members.romanStageName eq idol) and (Members.id eq group.first().id) }
             if (member.empty()) {
                 embedBuilder = Theme.errorEmbed("$idol is not in $groupStr!")
                 rollback()

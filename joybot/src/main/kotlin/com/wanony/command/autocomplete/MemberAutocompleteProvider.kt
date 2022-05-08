@@ -19,10 +19,10 @@ class MemberAutocompleteProvider : AutocompleteProvider {
         val query = if (group != null) {
             Members.innerJoin(Groups).select { Groups.romanName eq group }
         } else {
-            Members.slice(Members.romanName).selectAll()
+            Members.slice(Members.romanStageName).selectAll()
         }
         query.limit(25).map {
-            it[Members.romanName]
+            it[Members.romanStageName]
         }.sorted()
     }
 }

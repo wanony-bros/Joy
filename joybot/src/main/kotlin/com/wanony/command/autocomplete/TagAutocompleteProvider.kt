@@ -19,7 +19,7 @@ class TagAutocompleteProvider : AutocompleteProvider {
         val member = event.getOption("idol")?.asString
         val query = if (group != null && member != null) {
             Tags.innerJoin(LinkTags).innerJoin(Links).innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
-                .select { Groups.romanName eq group and (Members.romanName eq member) }.groupBy(Tags.tagName)
+                .select { Groups.romanName eq group and (Members.romanStageName eq member) }.groupBy(Tags.tagName)
         } else if (group != null) {
             Tags.innerJoin(LinkTags).innerJoin(Links).innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
                 .select { Groups.romanName eq group }.groupBy(Tags.tagName)

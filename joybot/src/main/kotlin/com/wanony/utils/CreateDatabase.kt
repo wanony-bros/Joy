@@ -43,7 +43,7 @@ fun main() {
         addLogger(StdOutSqlLogger)
 
         SchemaUtils.createDatabase(name)
-        SchemaUtils.setSchema(Schema("joy"))
+        SchemaUtils.setSchema(Schema(getProperty("databaseName")))
         SchemaUtils.createMissingTablesAndColumns(*tables.toTypedArray())
 
         Users.insert {

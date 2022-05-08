@@ -18,7 +18,7 @@ class GroupAutocompleteProvider : AutocompleteProvider {
     override fun provideOptions(event: CommandAutoCompleteInteractionEvent): List<String> = DB.transaction {
         val member = event.getOption("idol")?.asString
         val query = if (member != null) {
-            Groups.innerJoin(Members).select { Members.romanName eq member }
+            Groups.innerJoin(Members).select { Members.romanStageName eq member }
         } else {
             Groups.slice(Groups.romanName).selectAll()
         }
