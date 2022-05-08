@@ -8,21 +8,13 @@ import com.wanony.dao.Group
 import com.wanony.dao.Groups
 import com.wanony.dao.Member
 import com.wanony.getProperty
-import okhttp3.internal.wait
 import org.apache.commons.lang3.SystemUtils
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jsoup.Jsoup
 import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.FirefoxOptions
-import org.openqa.selenium.firefox.FirefoxProfile
 import org.openqa.selenium.interactions.Actions
-import java.io.File
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
@@ -35,7 +27,6 @@ fun main() {
      val databaseDriver = getProperty<String>("databaseDriver")
      val user = getProperty<String>("databaseUser")
      val password = getProperty<String>("databasePassword")
-     val name = getProperty<String>("databaseName")
 
      println(
          """
@@ -121,18 +112,6 @@ fun main() {
                 break
             }
         }
-
-
-
-
-
-        //val option = optionDiv.findElement(By.xpath("//*[text()='All']"))
-        //Actions(driver).moveToElement(option).click().perform()
-
-
-        //val html = driver.pageSource
-        //println(html)
-
     } finally {
         driver.quit()
     }
