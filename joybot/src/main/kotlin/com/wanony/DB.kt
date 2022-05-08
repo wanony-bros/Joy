@@ -20,11 +20,6 @@ object DB {
     fun <T> transaction(statement: Transaction.() -> T): T {
         Database.connect(db).also {
             return org.jetbrains.exposed.sql.transactions.transaction {
-                addLogger(object : SqlLogger {
-                    override fun log(context: StatementContext, transaction: Transaction) {
-                        // Don't log anything
-                    }
-                })
                 SchemaUtils.setSchema(Schema(dataBaseName))
                 statement()
             }
