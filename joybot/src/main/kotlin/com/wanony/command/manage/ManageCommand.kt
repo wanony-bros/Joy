@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 
 private const val TAG_GROUP_NAME = "tag"
 private const val IDOL_GROUP_NAME = "idol"
@@ -92,25 +91,33 @@ class ManageCommand : JoyCommand {
 
     private fun addTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
-        try {
-            DB.transaction {
-                Tag.new {
-                    this.tagName = name
-                    this.addedBy = event.user.idLong
-                }
+        val error: String? = DB.transaction {
+            Tag.find { Tags.tagName eq name }.firstOrNull() ?: return@transaction "Tag `$name` already exists!"
+
+            Tag.new {
+                this.tagName = name
+                this.addedBy = event.user.idLong
             }
-        } catch (e: ExposedSQLException) {
-            event.replyEmbeds(Theme.genericErrorEmbed()).queue()
-            return
+            null
         }
 
-        event.replyEmbeds(Theme.successEmbed("Added tag: `$name`").build()).queue()
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Added tag: `$name`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
     private fun renameTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
         val new = event.getOption("new")!!.asString
         val error: String? = DB.transaction {
+            val newTag = Tag.find { Tags.tagName eq new }.firstOrNull()
+            if (newTag != null) {
+                return@transaction "Tag with name `$new` already exists"
+            }
+
             Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
                 it.tagName = new
             } ?: return@transaction "Tag with name `$name` doesn't exist."
@@ -125,8 +132,22 @@ class ManageCommand : JoyCommand {
         event.replyEmbeds(builder.build()).queue()
     }
 
-    fun removeTag(event: SlashCommandInteractionEvent) {
+    private fun removeTag(event: SlashCommandInteractionEvent) {
+        val name = event.getOption("name")!!.asString
+        val error: String? = DB.transaction {
 
+            Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
+                it.delete()
+            } ?: return@transaction "Tag with name `$name` doesn't exist."
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Deleted the tag `$name`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
     fun addIdol(event: SlashCommandInteractionEvent) {
