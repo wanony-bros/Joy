@@ -16,8 +16,8 @@ class AddLinkCommand : JoyCommand {
     override val name: String = "addlink"
     override val commandData: CommandData =
         Commands.slash(name, "Add a link and contribute to Joy's database!")
-            .addOption(OptionType.STRING, "group", "Enter the group", true)
-            .addOption(OptionType.STRING, "idol", "Enter the idol", true)
+            .addOption(OptionType.STRING, "group", "Enter the group", true, true)
+            .addOption(OptionType.STRING, "idol", "Enter the idol", true, true)
             .addOption(OptionType.STRING, "links", "Enter links followed by their tags", true)
 
     override fun execute(event: SlashCommandInteractionEvent) {

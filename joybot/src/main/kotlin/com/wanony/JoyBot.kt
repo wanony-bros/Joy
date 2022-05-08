@@ -1,7 +1,9 @@
 package com.wanony
 
+import com.wanony.command.allAutocompleteProviders
 import com.wanony.command.allCommands
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -16,6 +18,12 @@ class JoyBot : ListenerAdapter() {
 
         // No command was found
         event.reply("I can't handle that command right now.").setEphemeral(true).queue()
+    }
+
+    override fun onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent) {
+        allAutocompleteProviders.firstOrNull {
+            it.autoComplete(event)
+        }
     }
 }
 

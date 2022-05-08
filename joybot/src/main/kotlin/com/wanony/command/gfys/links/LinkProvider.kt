@@ -1,12 +1,8 @@
 package com.wanony.command.gfys.links
 
 import com.wanony.DB
-import com.wanony.dao.Groups
-import com.wanony.dao.LinkMembers
-import com.wanony.dao.Links
-import com.wanony.dao.Members
-import org.jetbrains.exposed.sql.Random
-import org.jetbrains.exposed.sql.selectAll
+import com.wanony.dao.*
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 data class AnnotatedLink(val link: String, val group: String, val member: String)
@@ -33,9 +29,14 @@ object LinkProvider {
         this.recentlySent.getOrPut(channel) { CappedList(100) }.add(link)
     }
 
-    fun getLink(channel: Long): AnnotatedLink? {
+    fun getLink(
+        channel: Long,
+        group: String? = null,
+        member: String? = null,
+        tag: String? = null
+    ): AnnotatedLink? {
         while (true) {
-            val link = getNonUniqueLink() ?: return null
+            val link = getNonUniqueLink(group, member, tag) ?: return null
             val recent = recentlySent[channel] ?: return link
             if (!recent.contains(link.link) || (!recent.isFull())) {
                 // if it sends 100 links and then finds a duplicate it should be fine
@@ -48,9 +49,26 @@ object LinkProvider {
 
     // May be quicker in future to do multiple selects if slowness observed, as selecting all link rows with
     // multiple joins is slow
-    private fun getNonUniqueLink(): AnnotatedLink? = transaction(DB.getConnection()) {
-        val result = Links.innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
-            .selectAll().orderBy(Random()).limit(1).firstOrNull()
+    private fun getNonUniqueLink(
+        group: String? = null,
+        member: String? = null,
+        tag: String? = null
+    ): AnnotatedLink? = transaction(DB.getConnection()) {
+        // potentially add logger if this is slow
+        val join = Links.innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
+        val query = if (tag != null) {
+            join.innerJoin(LinkTags).innerJoin(Tags).selectAll().andWhere { Tags.tagName eq tag }
+        } else {
+            join.selectAll()
+        }
+        if (group != null) {
+            query.andWhere { Groups.romanName eq group }
+        }
+        if (member != null) {
+            query.andWhere { Members.romanName eq member }
+        }
+
+        val result = query.orderBy(Random()).limit(1).firstOrNull()
         result?.let {
             AnnotatedLink(
                 it[Links.link],
