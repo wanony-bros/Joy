@@ -11,13 +11,14 @@ interface AutocompleteProvider {
     val commandSelector: CommandSelector
 
     fun autoComplete(event: CommandAutoCompleteInteractionEvent): Boolean {
-        if (commandSelector(eventName) && event.focusedOption.name == eventName && event.focusedOption.type == OptionType.STRING) {
-            event.replyChoiceStrings(
-                provideOptions(event).filter { it.startsWith(event.focusedOption.value) }
-            ).queue()
-            return true
-        }
-        return false
+        if (!commandSelector(eventName)) return false
+        if (event.focusedOption.name != eventName) return false
+        if (event.focusedOption.type != OptionType.STRING) return false
+
+        event.replyChoiceStrings(
+            provideOptions(event).filter { it.startsWith(event.focusedOption.value) }
+        ).queue()
+        return true
     }
 
     fun provideOptions(event: CommandAutoCompleteInteractionEvent): List<String>
