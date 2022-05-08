@@ -136,9 +136,8 @@ class ManageCommand : JoyCommand {
         val name = event.getOption("name")!!.asString
         val error: String? = DB.transaction {
 
-            Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
-                it.delete()
-            } ?: return@transaction "Tag with name `$name` doesn't exist."
+            Tag.find { Tags.tagName eq name }.firstOrNull()?.delete()
+                ?: return@transaction "Tag with name `$name` doesn't exist."
             null
         }
 
