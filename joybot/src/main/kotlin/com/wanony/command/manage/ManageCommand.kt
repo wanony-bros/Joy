@@ -92,7 +92,10 @@ class ManageCommand : JoyCommand {
     private fun addTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
         val error: String? = DB.transaction {
-            Tag.find { Tags.tagName eq name }.firstOrNull() ?: return@transaction "Tag `$name` already exists!"
+            val tag = Tag.find { Tags.tagName eq name }.firstOrNull()
+            if (tag != null) {
+                return@transaction "Tag `$name` already exists!"
+            }
 
             Tag.new {
                 this.tagName = name
@@ -115,7 +118,7 @@ class ManageCommand : JoyCommand {
         val error: String? = DB.transaction {
             val newTag = Tag.find { Tags.tagName eq new }.firstOrNull()
             if (newTag != null) {
-                return@transaction "Tag with name `$new` already exists"
+                return@transaction "Tag with name `$new` already exists!"
             }
 
             Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
