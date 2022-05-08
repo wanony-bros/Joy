@@ -10,6 +10,10 @@ object Members : IntIdTable() {
     val groupId = reference("groupId", Groups.id, onDelete = ReferenceOption.CASCADE)
     val romanName = varchar("romanName", 255)
     val addedBy = long("addedBy")
+
+    init {
+        uniqueIndex("group_name", groupId, romanName)
+    }
 }
 
 class Member(id: EntityID<Int>): IntEntity(id) {

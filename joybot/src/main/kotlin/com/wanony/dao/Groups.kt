@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Groups : IntIdTable() {
-    val romanName = varchar("romanName", 255)
+    val romanName = varchar("romanName", 255).uniqueIndex()
     val addedBy = long("addedBy")
 }
 

@@ -4,12 +4,14 @@ import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
 import com.wanony.dao.Tag
+import com.wanony.dao.Tags
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 
 private const val TAG_GROUP_NAME = "tag"
 private const val IDOL_GROUP_NAME = "idol"
@@ -28,7 +30,7 @@ class ManageCommand : JoyCommand {
                 SubcommandData(ADD_OPERATION_NAME, "Add a tag")
                     .addOption(OptionType.STRING, "name", "The tag to add", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a tag")
-                    .addOption(OptionType.STRING, "current", "The current name of the tag to change", true)
+                    .addOption(OptionType.STRING, "name", "The current name of the tag to change", true)
                     .addOption(OptionType.STRING, "new", "The new name of the tag", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a tag")
                     .addOption(OptionType.STRING, "name", "The tag to remove", true)
@@ -38,7 +40,8 @@ class ManageCommand : JoyCommand {
                     .addOption(OptionType.STRING, "name", "The idol to add", true)
                     .addOption(OptionType.STRING, "group", "The group to add the idol to", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a idol")
-                    .addOption(OptionType.STRING, "current", "The current name of the idol to change", true)
+                    .addOption(OptionType.STRING, "name", "The current name of the idol to change", true)
+                    .addOption(OptionType.STRING, "group", "The group the idol belongs to", true)
                     .addOption(OptionType.STRING, "new", "The new name of the idol", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a idol")
                     .addOption(OptionType.STRING, "idol", "The idol to remove", true)
@@ -47,7 +50,7 @@ class ManageCommand : JoyCommand {
                 SubcommandData(ADD_OPERATION_NAME, "Add a group")
                     .addOption(OptionType.STRING, "name", "The group to add", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a group")
-                    .addOption(OptionType.STRING, "current", "The current name of the group to change", true)
+                    .addOption(OptionType.STRING, "name", "The current name of the group to change", true)
                     .addOption(OptionType.STRING, "new", "The new name of the group", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a group")
                     .addOption(OptionType.STRING, "name", "The group to remove", true)
@@ -89,18 +92,37 @@ class ManageCommand : JoyCommand {
 
     private fun addTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
-        DB.transaction {
-            Tag.new {
-                this.tagName = name
-                this.addedBy = event.user.idLong
+        try {
+            DB.transaction {
+                Tag.new {
+                    this.tagName = name
+                    this.addedBy = event.user.idLong
+                }
             }
+        } catch (e: ExposedSQLException) {
+            event.replyEmbeds(Theme.genericErrorEmbed()).queue()
+            return
         }
 
-        event.replyEmbeds(Theme.successEmbed("Added tag: $name").build()).queue()
+        event.replyEmbeds(Theme.successEmbed("Added tag: `$name`").build()).queue()
     }
 
-    fun renameTag(event: SlashCommandInteractionEvent) {
+    private fun renameTag(event: SlashCommandInteractionEvent) {
+        val name = event.getOption("name")!!.asString
+        val new = event.getOption("new")!!.asString
+        val error: String? = DB.transaction {
+            Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
+                it.tagName = new
+            } ?: return@transaction "Tag with name `$name` doesn't exist."
+            null
+        }
 
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Renamed tag `$name` to `$new`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
     fun removeTag(event: SlashCommandInteractionEvent) {

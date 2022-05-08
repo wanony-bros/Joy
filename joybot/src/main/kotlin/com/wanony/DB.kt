@@ -2,10 +2,9 @@ package com.wanony
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.sql.DataSource
 
@@ -18,9 +17,14 @@ object DB {
         }
     }
 
-    fun <T> transaction(statement: Transaction.() -> T) {
+    fun <T> transaction(statement: Transaction.() -> T): T {
         Database.connect(db).also {
-            org.jetbrains.exposed.sql.transactions.transaction {
+            return org.jetbrains.exposed.sql.transactions.transaction {
+                addLogger(object : SqlLogger {
+                    override fun log(context: StatementContext, transaction: Transaction) {
+                        // Don't log anything
+                    }
+                })
                 SchemaUtils.setSchema(Schema(dataBaseName))
                 statement()
             }

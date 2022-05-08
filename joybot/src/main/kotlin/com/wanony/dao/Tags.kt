@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Tags : IntIdTable() {
-    val tagName = varchar("tagName", 255)
+    val tagName = varchar("tagName", 255).uniqueIndex()
     val addedBy = long("addedBy")
 }
 
