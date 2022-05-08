@@ -5,7 +5,9 @@ import com.wanony.command.ALL_COMMANDS
 import com.wanony.command.AutocompleteProvider
 import com.wanony.command.CommandSelector
 import com.wanony.dao.Groups
+import com.wanony.dao.Members
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 
 class GroupAutocompleteProvider : AutocompleteProvider {
@@ -14,7 +16,13 @@ class GroupAutocompleteProvider : AutocompleteProvider {
     override val commandSelector: CommandSelector = ALL_COMMANDS
 
     override fun provideOptions(event: CommandAutoCompleteInteractionEvent): List<String> = DB.transaction {
-        Groups.slice(Groups.romanName).selectAll().limit(25).map {
+        val member = event.getOption("idol")?.asString
+        val query = if (member != null) {
+            Groups.innerJoin(Members).select { Members.romanName eq member }
+        } else {
+            Groups.slice(Groups.romanName).selectAll()
+        }
+        query.limit(25).map {
             it[Groups.romanName]
         }.sorted()
     }
