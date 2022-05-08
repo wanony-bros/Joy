@@ -17,7 +17,7 @@ class SuggestCommand : JoyCommand {
             .addOption(OptionType.STRING, "suggestion", "Provide your suggestion", true)
             .addOption(OptionType.BOOLEAN, "anonymity", "Do you want to suggest anonymously?", true)
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         // This option is required it should always be present
         val suggestion = event.getOption("suggestion")!!.asString
         val isAnonymous = event.getOption("anonymity")?.asBoolean ?: true

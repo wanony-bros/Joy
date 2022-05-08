@@ -8,21 +8,24 @@ import com.wanony.command.autocomplete.TagAutocompleteProvider
 import com.wanony.command.gfys.AddLinkCommand
 import com.wanony.command.gfys.GfyCommand
 import com.wanony.command.gfys.RandomLinkCommand
+import com.wanony.command.gfys.TimerCommand
 import com.wanony.command.manage.ManageCommand
 import com.wanony.command.misc.AvatarCommand
+import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
-import net.dv8tion.jda.api.JDABuilder
+import dev.minn.jda.ktx.events.listener
+import dev.minn.jda.ktx.jdabuilder.intents
+import dev.minn.jda.ktx.jdabuilder.light
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.*
 
 class JoyBot(
     private val commands: Map<String, JoyCommand>,
     private val autoCompleteProviders: List<AutocompleteProvider>
-) : ListenerAdapter() {
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+) {
+    suspend fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         commands[event.name]?.let {
             it.execute(event)
             return
@@ -32,7 +35,7 @@ class JoyBot(
         event.reply("I can't handle that command right now.").setEphemeral(true).queue()
     }
 
-    override fun onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent) {
+    fun onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent) {
         autoCompleteProviders.firstOrNull {
             it.autoComplete(event)
         }
@@ -49,6 +52,8 @@ fun main() {
         RandomLinkCommand(),
         ManageCommand(),
         GfyCommand(),
+        InformationCommand(),
+        TimerCommand(),
     ).associateBy { it.commandName }
 
     val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
@@ -57,9 +62,16 @@ fun main() {
         TagAutocompleteProvider(),
     )
 
-    val jda = JDABuilder.createLight(token, EnumSet.of(GatewayIntent.GUILD_MEMBERS))
-        .addEventListeners(JoyBot(allCommands, allAutocompleteProviders))
-        .build()
+    val jda = light(token, enableCoroutines = true) {
+        intents += listOf(GatewayIntent.GUILD_MEMBERS)
+    }
+    val joy = JoyBot(allCommands, allAutocompleteProviders)
+    jda.listener<SlashCommandInteractionEvent> { event ->
+        joy.onSlashCommandInteraction(event)
+    }
+    jda.listener<CommandAutoCompleteInteractionEvent> { event ->
+        joy.onCommandAutoCompleteInteraction(event)
+    }
 
     listOfNotNull(
         jda.updateCommands(),

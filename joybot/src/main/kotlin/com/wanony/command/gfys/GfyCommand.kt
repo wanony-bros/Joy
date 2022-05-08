@@ -17,7 +17,7 @@ class GfyCommand : JoyCommand {
             // potentially extend to get more than one tag
         .addOption(OptionType.STRING, "tag", "Enter additional tags", false, true)
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         val groupStr = event.getOption("group")?.asString
         val idol = event.getOption("idol")?.asString
         val tag = event.getOption("tag")?.asString

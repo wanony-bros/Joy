@@ -13,7 +13,7 @@ class AvatarCommand : JoyCommand {
         Commands.slash(commandName, "See a larger version of a user avatar")
             .addOption(OptionType.USER, "user", "Select a user")
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         val member = event.getOption("user")?.asMember ?: event.member
         val user = event.getOption("user")?.asUser ?: event.user
         val embed = EmbedBuilder().apply {

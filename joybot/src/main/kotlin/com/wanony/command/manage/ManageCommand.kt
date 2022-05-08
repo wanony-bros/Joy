@@ -61,7 +61,7 @@ class ManageCommand : JoyCommand {
             )
         )
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         val subcommandGroup = event.subcommandGroup
         val subcommandName = event.subcommandName
         when(subcommandGroup) {

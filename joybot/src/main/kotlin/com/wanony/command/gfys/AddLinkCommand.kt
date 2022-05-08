@@ -20,7 +20,7 @@ class AddLinkCommand : JoyCommand {
             .addOption(OptionType.STRING, "idol", "Enter the idol", true, true)
             .addOption(OptionType.STRING, "links", "Enter links followed by their tags", true)
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         val groupStr = event.getOption("group")!!.asString
         val idol = event.getOption("idol")!!.asString
         val links = event.getOption("links")!!.asString

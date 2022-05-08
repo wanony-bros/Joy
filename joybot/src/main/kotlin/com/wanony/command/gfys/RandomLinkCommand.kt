@@ -12,7 +12,7 @@ class RandomLinkCommand : JoyCommand {
     override val commandData: CommandData =
         Commands.slash(commandName, "Get a random link from Joy's database!")
 
-    override fun execute(event: SlashCommandInteractionEvent) {
+    override suspend fun execute(event: SlashCommandInteractionEvent) {
         val channel = event.channel.idLong
         val link = LinkProvider.getLink(channel)
         if (link != null) {

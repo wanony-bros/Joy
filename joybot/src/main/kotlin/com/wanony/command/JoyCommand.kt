@@ -7,5 +7,5 @@ interface JoyCommand {
     val commandName: String
     val commandData: CommandData
 
-    fun execute(event: SlashCommandInteractionEvent)
+    suspend fun execute(event: SlashCommandInteractionEvent)
 }
