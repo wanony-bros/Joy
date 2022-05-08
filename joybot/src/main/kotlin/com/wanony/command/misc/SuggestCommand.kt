@@ -11,9 +11,9 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands
 import java.awt.Color
 
 class SuggestCommand : JoyCommand {
-    override val name: String = "suggest"
+    override val commandName: String = "suggest"
     override val commandData: CommandData =
-        Commands.slash(name, "Suggest a new feature for Joy")
+        Commands.slash(commandName, "Suggest a new feature for Joy")
             .addOption(OptionType.STRING, "suggestion", "Provide your suggestion", true)
             .addOption(OptionType.BOOLEAN, "anonymity", "Do you want to suggest anonymously?", true)
 

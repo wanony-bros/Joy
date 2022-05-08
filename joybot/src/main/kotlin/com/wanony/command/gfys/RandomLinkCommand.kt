@@ -8,9 +8,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
 class RandomLinkCommand : JoyCommand {
-    override val name: String = "random"
+    override val commandName: String = "random"
     override val commandData: CommandData =
-        Commands.slash(name, "Get a random link from Joy's database!")
+        Commands.slash(commandName, "Get a random link from Joy's database!")
 
     override fun execute(event: SlashCommandInteractionEvent) {
         val channel = event.channel.idLong

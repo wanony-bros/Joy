@@ -8,9 +8,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
 class AvatarCommand : JoyCommand {
-    override val name: String = "avatar"
+    override val commandName: String = "avatar"
     override val commandData: CommandData =
-        Commands.slash(name, "See a larger version of a user avatar")
+        Commands.slash(commandName, "See a larger version of a user avatar")
             .addOption(OptionType.USER, "user", "Select a user")
 
     override fun execute(event: SlashCommandInteractionEvent) {

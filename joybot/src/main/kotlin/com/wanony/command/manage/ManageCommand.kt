@@ -3,8 +3,7 @@ package com.wanony.command.manage
 import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.dao.Tag
-import com.wanony.dao.Tags
+import com.wanony.dao.*
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
@@ -22,41 +21,42 @@ private const val RENAME_OPERATION_NAME = "rename"
 private const val REMOVE_OPERATION_NAME = "remove"
 
 class ManageCommand : JoyCommand {
-    override val name: String = "manage"
+    override val commandName: String = "manage"
     override val commandData: CommandData =
-        Commands.slash(name, "Manage Joy's content").addSubcommandGroups(
+        Commands.slash(commandName, "Manage Joy's content").addSubcommandGroups(
             SubcommandGroupData(TAG_GROUP_NAME, "Manage tags").addSubcommands(
                 SubcommandData(ADD_OPERATION_NAME, "Add a tag")
                     .addOption(OptionType.STRING, "name", "The tag to add", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a tag")
-                    .addOption(OptionType.STRING, "name", "The current name of the tag to change", true)
+                    .addOption(OptionType.STRING, "tag", "The current name of the tag to change", true, true)
                     .addOption(OptionType.STRING, "new", "The new name of the tag", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a tag")
-                    .addOption(OptionType.STRING, "name", "The tag to remove", true)
+                    .addOption(OptionType.STRING, "tag", "The tag to remove", true, true)
             ),
             SubcommandGroupData(IDOL_GROUP_NAME, "Manage idols").addSubcommands(
                 SubcommandData(ADD_OPERATION_NAME, "Add a idol")
-                    .addOption(OptionType.STRING, "name", "The idol to add", true)
-                    .addOption(OptionType.STRING, "group", "The group to add the idol to", true),
+                    .addOption(OptionType.STRING, "group", "The group to add the idol to", true, true)
+                    .addOption(OptionType.STRING, "name", "The idol to add", true, true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a idol")
-                    .addOption(OptionType.STRING, "name", "The current name of the idol to change", true)
-                    .addOption(OptionType.STRING, "group", "The group the idol belongs to", true)
-                    .addOption(OptionType.STRING, "new", "The new name of the idol", true),
+                    .addOption(OptionType.STRING, "group", "The group the idol belongs to", true, true)
+                    .addOption(OptionType.STRING, "idol", "The current name of the idol to change", true, true)
+                    .addOption(OptionType.STRING, "name", "The new name of the idol", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a idol")
-                    .addOption(OptionType.STRING, "idol", "The idol to remove", true)
+                    .addOption(OptionType.STRING, "group", "The group the idol belongs to", true, true)
+                    .addOption(OptionType.STRING, "idol", "The idol to remove", true, true)
             ),
             SubcommandGroupData(GROUP_GROUP_NAME, "Manage groups").addSubcommands(
                 SubcommandData(ADD_OPERATION_NAME, "Add a group")
                     .addOption(OptionType.STRING, "name", "The group to add", true),
                 SubcommandData(RENAME_OPERATION_NAME, "Rename a group")
-                    .addOption(OptionType.STRING, "name", "The current name of the group to change", true)
+                    .addOption(OptionType.STRING, "group", "The current name of the group to change", true, true)
                     .addOption(OptionType.STRING, "new", "The new name of the group", true),
                 SubcommandData(REMOVE_OPERATION_NAME, "Remove a group")
-                    .addOption(OptionType.STRING, "name", "The group to remove", true)
+                    .addOption(OptionType.STRING, "group", "The group to remove", true, true)
             ),
             SubcommandGroupData(LINK_GROUP_NAME, "Manage links").addSubcommands(
                 SubcommandData("remove", "Remove a link")
-                    .addOption(OptionType.STRING, "name", "The link to remove", true)
+                    .addOption(OptionType.STRING, "link", "The link to remove", true)
             )
         )
 
@@ -112,7 +112,7 @@ class ManageCommand : JoyCommand {
         val builder = if (error != null)
             Theme.errorEmbed(error)
         else
-            Theme.successEmbed("Added tag: `$name`")
+            Theme.successEmbed("Added tag `$name`")
 
         event.replyEmbeds(builder.build()).queue()
     }
@@ -123,12 +123,12 @@ class ManageCommand : JoyCommand {
         val error: String? = DB.transaction {
             val newTag = Tag.find { Tags.tagName eq new }.firstOrNull()
             if (newTag != null) {
-                return@transaction "Tag with name `$new` already exists!"
+                return@transaction "Tag `$new` already exists!"
             }
 
             Tag.find { Tags.tagName eq name }.firstOrNull()?.let {
                 it.tagName = new
-            } ?: return@transaction "Tag with name `$name` doesn't exist."
+            } ?: return@transaction "Tag `$name` doesn't exist."
             null
         }
 
@@ -143,9 +143,8 @@ class ManageCommand : JoyCommand {
     private fun removeTag(event: SlashCommandInteractionEvent) {
         val name = event.getOption("name")!!.asString
         val error: String? = DB.transaction {
-
             Tag.find { Tags.tagName eq name }.firstOrNull()?.delete()
-                ?: return@transaction "Tag with name `$name` doesn't exist."
+                ?: return@transaction "Tag `$name` doesn't exist."
             null
         }
 
@@ -169,19 +168,81 @@ class ManageCommand : JoyCommand {
 
     }
 
-    fun addGroup(event: SlashCommandInteractionEvent) {
+    private fun addGroup(event: SlashCommandInteractionEvent) {
+        val name = event.getOption("name")!!.asString
+        val error: String? = DB.transaction {
+            val tag = Group.find { Groups.romanName eq name }.firstOrNull()
+            if (tag != null) {
+                return@transaction "Group `$name` already exists!"
+            }
 
+            Group.new {
+                this.romanName = name
+                this.addedBy = event.user.idLong
+            }
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Added group `$name`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
-    fun renameGroup(event: SlashCommandInteractionEvent) {
+    private fun renameGroup(event: SlashCommandInteractionEvent) {
+        val old = event.getOption("group")!!.asString
+        val new = event.getOption("new")!!.asString
+        val error: String? = DB.transaction {
+            val newGroup = Group.find { Groups.romanName eq new }.firstOrNull()
+            if (newGroup != null) {
+                return@transaction "Group `$new` already exists!"
+            }
 
+            Group.find { Groups.romanName eq old }.firstOrNull()?.let {
+                it.romanName = new
+            } ?: return@transaction "Group `$old` doesn't exist."
+            null
+        }
+
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Renamed group `$old` to `$new`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
-    fun removeGroup(event: SlashCommandInteractionEvent) {
+    private fun removeGroup(event: SlashCommandInteractionEvent) {
+        val name = event.getOption("group")!!.asString
+        val error: String? = DB.transaction {
+            Group.find { Groups.romanName eq name }.firstOrNull()?.delete()
+                ?: return@transaction "Group `$name` doesn't exist."
+            null
+        }
 
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Removed group `$name`")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 
-    fun removeLink(event: SlashCommandInteractionEvent) {
+    private fun removeLink(event: SlashCommandInteractionEvent) {
+        val link = event.getOption("link")!!.asString
+        val error: String? = DB.transaction {
+            Link.find { Links.link eq link }.firstOrNull()?.delete()
+                ?: return@transaction "Link doesn't exist."
+            null
+        }
 
+        val builder = if (error != null)
+            Theme.errorEmbed(error)
+        else
+            Theme.successEmbed("Removed link <$link>!")
+
+        event.replyEmbeds(builder.build()).queue()
     }
 }

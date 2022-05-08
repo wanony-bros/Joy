@@ -19,7 +19,7 @@ val allCommands : Map<String, JoyCommand> = listOf(
     RandomLinkCommand(),
     ManageCommand(),
     GfyCommand(),
-).associateBy { it.name }
+).associateBy { it.commandName }
 
 val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
     GroupAutocompleteProvider(),
@@ -28,7 +28,7 @@ val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
 )
 
 interface JoyCommand {
-    val name: String
+    val commandName: String
     val commandData: CommandData
 
     fun execute(event: SlashCommandInteractionEvent)

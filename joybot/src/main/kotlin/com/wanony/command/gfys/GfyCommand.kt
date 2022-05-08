@@ -9,9 +9,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
 class GfyCommand : JoyCommand {
-    override val name: String = "gfy"
+    override val commandName: String = "gfy"
     override val commandData: CommandData = Commands.slash(
-        name, "Get a gfy from Joy's database!")
+        commandName, "Get a gfy from Joy's database!")
         .addOption(OptionType.STRING, "group", "Enter the group", false, true)
         .addOption(OptionType.STRING, "idol", "Enter the idol", false, true)
             // potentially extend to get more than one tag
