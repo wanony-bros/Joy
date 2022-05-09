@@ -46,11 +46,11 @@ fun main() {
         SchemaUtils.setSchema(Schema(getProperty("databaseName")))
         SchemaUtils.createMissingTablesAndColumns(*tables.toTypedArray())
 
-        Users.insert {
+        Users.insertIgnore {
             it[id] = getProperty<Long>("slvinId")
             it[admin] = true
         }
-        Users.insert {
+        Users.insertIgnore {
             it[id] = getProperty<Long>("wanonyId")
             it[admin] = true
         }
