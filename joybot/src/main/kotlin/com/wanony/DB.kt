@@ -20,7 +20,6 @@ object DB {
         }
     }
 
-
     private var db: DataSource = connect()
 
     private fun connect(): DataSource {
