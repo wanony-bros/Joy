@@ -10,6 +10,7 @@ import com.wanony.command.gfys.GfyCommand
 import com.wanony.command.gfys.RandomLinkCommand
 import com.wanony.command.gfys.TimerCommand
 import com.wanony.command.manage.ManageCommand
+import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
@@ -54,6 +55,7 @@ fun main() {
         GfyCommand(),
         InformationCommand(),
         TimerCommand(),
+        MemeCommand(),
     ).associateBy { it.commandName }
 
     val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
