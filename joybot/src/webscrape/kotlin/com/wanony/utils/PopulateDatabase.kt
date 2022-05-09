@@ -8,6 +8,7 @@ import com.wanony.dao.Group
 import com.wanony.dao.Groups
 import com.wanony.dao.Member
 import com.wanony.getProperty
+import java.time.Duration
 import org.apache.commons.lang3.SystemUtils
 import org.jetbrains.exposed.sql.Database
 import org.openqa.selenium.By
@@ -16,7 +17,6 @@ import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.interactions.Actions
 import java.time.LocalDate
-import java.util.concurrent.TimeUnit
 
 fun main() {
     if (!SystemUtils.IS_OS_WINDOWS) {
@@ -49,7 +49,7 @@ fun main() {
     })
     try {
         driver.get("https://dbkpop.com/db/all-k-pop-idols/")
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS)
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
 
         fun scroll(driver: FirefoxDriver, element: WebElement) {
             val x = element.rect.x
