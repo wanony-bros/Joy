@@ -11,12 +11,6 @@ import javax.sql.DataSource
 object DB {
     private val dataBaseName: String = getProperty("databaseName")
 
-    fun getConnection() = Database.connect(db).also {
-        org.jetbrains.exposed.sql.transactions.transaction {
-            SchemaUtils.setSchema(Schema(dataBaseName))
-        }
-    }
-
     fun <T> transaction(statement: Transaction.() -> T): T {
         Database.connect(db).also {
             return org.jetbrains.exposed.sql.transactions.transaction {

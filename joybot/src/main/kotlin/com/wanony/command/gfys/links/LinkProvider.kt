@@ -53,7 +53,7 @@ object LinkProvider {
         group: String? = null,
         member: String? = null,
         tag: String? = null
-    ): AnnotatedLink? = transaction(DB.getConnection()) {
+    ): AnnotatedLink? = DB.transaction {
         // potentially add logger if this is slow
         val join = Links.innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
         val query = if (tag != null) {

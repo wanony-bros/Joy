@@ -39,7 +39,7 @@ class AddLinkCommand : JoyCommand {
         var addedLinks = 0
         var skippedLinks = 0
         val ignoredTags = mutableListOf<String>()
-        transaction(DB.getConnection()) {
+        DB.transaction {
             fun processTags(linkWithTag: Pair<Link, List<String>>) {
                 linkWithTag.second.forEach { tagStr ->
                     val tag = Tag.find { Tags.tagName eq tagStr }
