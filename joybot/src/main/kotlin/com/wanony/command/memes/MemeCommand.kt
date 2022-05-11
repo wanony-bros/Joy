@@ -27,21 +27,24 @@ class MemeCommand : JoyCommand {
         val memeContent = getMeme(meme)
 
         if (memeContent != null) {
+            // we got a meme, we send a meme
             event.reply(memeContent).queue()
-        } else {
-            if (content != null) {
-                if (addMeme(meme, content, user)) {
-                    event.replyEmbeds(Theme.successEmbed("Added meme: $meme!").build()).queue()
-                } else {
-                    event.replyEmbeds(Theme.errorEmbed("Meme: $meme already exists! Try a new name").build()).queue()
-                }
-            } else {
-                event.replyEmbeds(
-                    Theme.errorEmbed("To add a meme, please provide a content slash option!").build()).queue()
-            }
+            return
         }
+        if (content != null) {
+            // if the user supplied some content, we try to add it
+            if (addMeme(meme, content, user)) {
+                event.replyEmbeds(Theme.successEmbed("Added meme: $meme!").build()).queue()
+                return
+            }
+            event.replyEmbeds(Theme.errorEmbed("Meme: $meme already exists! Try a new name").build()).queue()
+        }
+        // no meme, no caption, instruct user to add a caption
+        event.replyEmbeds(
+            Theme.errorEmbed("To add a meme, please provide a content slash option!").build()).queue()
     }
 
+    // add meme to the database
     private fun addMeme(meme: String, content: String, userId: Long): Boolean = DB.transaction {
         Memes.insert {
             it[Memes.meme] = meme
@@ -50,6 +53,7 @@ class MemeCommand : JoyCommand {
         }.insertedCount > 0
     }
 
+    // get meme from the DB
     private fun getMeme(meme: String): String? = DB.transaction {
         Memes.select { Memes.meme eq meme }.firstOrNull()?.let { it[Memes.content] }
     }
