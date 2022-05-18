@@ -36,6 +36,8 @@ dependencies {
     implementation("net.dv8tion:JDA:5.0.0-alpha.11")
     implementation("com.github.minndevelopment:jda-ktx:78e74bc45b8d73a5d7974ef0d5f8efdd5d97910f")
     implementation("com.zaxxer:HikariCP:4.0.3")
+    implementation("com.google.oauth-client:google-oauth-client:1.33.3")
+    implementation("com.google.oauth-client:google-oauth-client-jetty:1.33.3")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 
