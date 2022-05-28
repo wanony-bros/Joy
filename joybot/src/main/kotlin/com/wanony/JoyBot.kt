@@ -87,12 +87,28 @@ fun main() {
     }
 }
 
+/**
+ * Attempts to find the property given by [key] within misc.properties.
+ *
+ * @return the value of the property as [T] or null if not found.
+ */
 @Suppress("UNCHECKED_CAST")
-fun <T> getProperty(key: String): T {
+fun <T> findProperty(key: String): T? {
     val props = ClassLoader.getSystemClassLoader().getResourceAsStream("misc.properties").use {
         it ?: throw java.lang.RuntimeException("Missing properties file misc.properties")
         Properties().apply { load(it) }
     }
     return (props.getProperty(key) as T)
-        ?: throw java.lang.RuntimeException("Could not find property with key '$key' in misc.properties")
+
 }
+
+/**
+ * Attempts to get the property given by [key] within misc.properties.
+ *
+ * Throws a runtime exception is the property does not exist.
+ *
+ * @return the value of the property
+ */
+fun <T> getProperty(key: String): T =
+    findProperty<T>(key) ?: throw java.lang.RuntimeException("Could not find property with key '$key' in misc.properties")
+

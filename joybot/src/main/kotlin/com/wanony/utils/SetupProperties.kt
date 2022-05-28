@@ -46,6 +46,10 @@ fun main() {
     testGuildId.ifNotBlank { properties.setProperty("testGuild", it) }
     val suggestChannel = askForValue("What is the id of the suggest channel?", acceptBlanks)
     suggestChannel.ifNotBlank { properties.setProperty("suggestChannel", it) }
+    val redditToken = askForValue("(Optional) What is your Reddit API token?", true)
+    redditToken.ifNotBlank { properties.setProperty("redditToken", it) }
+    val redditSecret = askForValue("(Optional) What is your Reddit API secret?", true)
+    redditSecret.ifNotBlank { properties.setProperty("redditSecret", it) }
 
     val outStream = file.outputStream()
     properties.store(outStream, "Misc properties")
