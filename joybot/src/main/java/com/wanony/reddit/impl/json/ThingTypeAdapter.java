@@ -1,21 +1,44 @@
 package com.wanony.reddit.impl.json;
 
+import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import com.wanony.reddit.api.json.Thing;
+import com.wanony.reddit.impl.Kind;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-public class ThingTypeAdapter extends TypeAdapter<Thing> {
-  @Override
-  public void write(JsonWriter out, Thing value) throws IOException {
+public class ThingTypeAdapter extends TypeAdapter<RealThing> {
+  public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+      if (!(type.getType().equals(RealThing.class))) {
+        return null;
+      }
 
+      //noinspection unchecked
+      return (TypeAdapter<T>) new ThingTypeAdapter(gson);
+    }
+  };
+
+  public Gson context;
+
+  public ThingTypeAdapter(@NotNull Gson gson) {
+    context = gson;
   }
 
   @Override
-  public Thing read(JsonReader in) throws IOException {
+  public void write(JsonWriter out, RealThing value) throws IOException {
+    context.getAdapter(Object.class).write(out, value);
+  }
+
+  @Override
+  public RealThing read(JsonReader in) throws IOException {
     if (in.peek() == JsonToken.NULL) {
       in.nextNull();
       return null;
@@ -34,9 +57,17 @@ public class ThingTypeAdapter extends TypeAdapter<Thing> {
       throw new RuntimeException("Expected data found " + dataName);
     }
 
-    in.skipValue();
+    RealThing thing = new RealThing();
+    thing.kind = kind;
+    Kind k = Arrays.stream(Kind.values()).filter((o) -> Kind.is(kind, o)).findFirst().orElse(null);
+    if (k != null) {
+      thing.data = context.getAdapter(k.getType()).read(in);
+    }
+    if (k == null) {
+      throw new RuntimeException("Unexpected data found! Kind: " + kind);
+    }
 
     in.endObject();
-    return null;
+    return thing;
   }
 }

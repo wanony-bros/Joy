@@ -5,19 +5,16 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ObjectParser;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.wanony.reddit.api.json.Thing;
-import com.wanony.reddit.impl.json.AccessToken;
+import com.wanony.reddit.api.json.Listing;
+import com.wanony.reddit.impl.json.RealThing;
 import com.wanony.reddit.impl.json.ThingTypeAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 
 public class DefaultRedditClient {
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -30,6 +27,8 @@ public class DefaultRedditClient {
     private static final String OAUTH_AUTHORIZE_ENDPOINT = "https://www.reddit.com/api/v1/authorize";
 
     private static final ObjectParser JSON = new JsonObjectParser(new GsonFactory());
+
+    private static final Gson GSON = new GsonBuilder().registerTypeAdapterFactory(ThingTypeAdapter.FACTORY).create();
 
     @NotNull
     private static final String USER_AGENT = "java:com.wanony:joy:dev (by /u/Slvinz)";
@@ -51,14 +50,14 @@ public class DefaultRedditClient {
         this.accessTokenProvider = new AccessTokenProvider(HTTP_TRANSPORT, JSON, USER_AGENT, apiKey, apiSecret);
     }
 
-
-    public Collection<String> subreddit() throws IOException {
-        Thing t = request("https://oauth.reddit.com/r/cars/new", Thing.class);
-        return Collections.emptyList();
+    @Nullable
+    public Listing subreddit(@NotNull String subreddit) throws IOException {
+        RealThing thing = request("https://oauth.reddit.com/r/" + subreddit +"/new", RealThing.class);
+        return (thing != null) ? thing.forceListing() : null;
     }
 
     @Nullable
-    private <T> Thing request(@NotNull String endPoint, @NotNull Class<T> expectedData) throws IOException {
+    private <T> T request(@NotNull String endPoint, @NotNull Class<T> expectedData) throws IOException {
         GenericUrl url = new GenericUrl(endPoint);
 
         HttpRequestFactory requestFactory =
@@ -75,10 +74,11 @@ public class DefaultRedditClient {
         HttpResponse response = request.execute();
         try {
             if (response.isSuccessStatusCode()) {
-                System.out.println(response.parseAsString());
-                return new GsonBuilder().registerTypeAdapter(Thing.class, new ThingTypeAdapter()).create().fromJson(response.parseAsString(), Thing.class);
+                return GSON.fromJson(response.parseAsString(), expectedData);
             } else {
-                throw new RuntimeException("Request for access token failed: " + response.parseAsString());
+                throw new RuntimeException(
+                        "Request at endpoint (" + endPoint + " failed with:  " + response.parseAsString()
+                );
             }
         } finally {
             response.disconnect();

@@ -1,4 +1,4 @@
-package com.wanony.reddit.api.json;
+package com.wanony.reddit.impl.json;
 
 import com.google.api.client.util.Key;
 

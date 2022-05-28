@@ -1,5 +1,6 @@
 package com.wanony.reddit.samples;
 
+import com.wanony.reddit.api.json.Listing;
 import com.wanony.reddit.impl.DefaultRedditClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,6 +12,8 @@ public class SubredditSample {
     String secret = "FBP7pBE-l0iG-IPsdKgVaR02Qx4t9w";
 
     DefaultRedditClient reddit = new DefaultRedditClient(token, secret);
-    reddit.subreddit();
+    Listing listing = reddit.subreddit("TwoXChromosomes");
+
+    System.out.println(listing);
   }
 }
