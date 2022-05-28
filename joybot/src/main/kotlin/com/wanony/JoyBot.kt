@@ -90,6 +90,7 @@ fun main() {
 @Suppress("UNCHECKED_CAST")
 fun <T> getProperty(key: String): T {
     val props = ClassLoader.getSystemClassLoader().getResourceAsStream("misc.properties").use {
+        it ?: throw java.lang.RuntimeException("Missing properties file misc.properties")
         Properties().apply { load(it) }
     }
     return (props.getProperty(key) as T)
