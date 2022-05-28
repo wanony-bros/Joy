@@ -1,6 +1,7 @@
 package com.wanony.reddit.samples;
 
 import com.wanony.JoyBotKt;
+import com.wanony.reddit.api.json.Link;
 import com.wanony.reddit.api.json.Listing;
 import com.wanony.reddit.impl.DefaultRedditClient;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +16,10 @@ public class SubredditSample {
     DefaultRedditClient reddit = new DefaultRedditClient(token, secret);
     Listing listing = reddit.subreddit("TwoXChromosomes");
 
-    System.out.println(listing);
+    assert listing != null;
+
+    for (Link l : listing.getLinks()) {
+      System.out.println(l.url());
+    }
   }
 }

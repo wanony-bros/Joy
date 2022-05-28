@@ -27,12 +27,17 @@ public enum Kind {
         return type;
     }
 
+
     public static boolean is(@NotNull String string, @NotNull Kind kind) {
-        return string.equals(kind.kind);
+        return kind.kind.equals(string);
+    }
+
+    public static boolean is(@NotNull String string, @NotNull Object obj, @NotNull Kind kind) {
+        return kind.kind.equals(string) && kind.type.equals(obj.getClass());
     }
 
     public static void ensure(@NotNull String string, @NotNull Object obj, @NotNull Kind kind) {
-        if (kind.kind.equals(string) && kind.type.equals(obj.getClass())) {
+        if (Kind.is(string, obj, kind)) {
             // All good boss
             return;
         }

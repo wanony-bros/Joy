@@ -2,6 +2,8 @@ package com.wanony.reddit.impl.json;
 
 import com.google.api.client.util.Key;
 import com.wanony.reddit.api.json.Link;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class RealLink extends Votable implements Link {
   @Key public String id;
@@ -34,4 +36,10 @@ public class RealLink extends Votable implements Link {
   //@Key public Boolean edited;
   @Key public String distinguished;
   @Key public Boolean stickied;
+
+  @Override
+  @Nullable // Is actually nullable?
+  public String url() {
+    return url;
+  }
 }
