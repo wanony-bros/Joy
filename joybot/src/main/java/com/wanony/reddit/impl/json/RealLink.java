@@ -42,4 +42,10 @@ public class RealLink extends Votable implements Link {
   public String url() {
     return url;
   }
+
+  @Override
+  @NotNull
+  public String name() {
+    return name;
+  }
 }

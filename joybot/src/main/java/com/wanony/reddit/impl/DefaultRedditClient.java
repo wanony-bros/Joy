@@ -10,11 +10,13 @@ import com.google.gson.GsonBuilder;
 import com.wanony.reddit.api.json.Listing;
 import com.wanony.reddit.impl.json.RealThing;
 import com.wanony.reddit.impl.json.ThingTypeAdapter;
+import org.apache.http.client.utils.URIBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class DefaultRedditClient {
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -34,30 +36,38 @@ public class DefaultRedditClient {
     private static final String USER_AGENT = "java:com.wanony:joy:dev (by /u/Slvinz)";
 
     @NotNull
-    private final String apiKey;
-    @NotNull
-    private final String apiSecret;
-
-    @NotNull
     private final AccessTokenProvider accessTokenProvider;
 
     public DefaultRedditClient(
         @NotNull String redditApiKey,
         @NotNull String redditApiSecret
     ) {
-        this.apiKey = redditApiKey;
-        this.apiSecret = redditApiSecret;
-        this.accessTokenProvider = new AccessTokenProvider(HTTP_TRANSPORT, JSON, USER_AGENT, apiKey, apiSecret);
+        this.accessTokenProvider = new AccessTokenProvider(HTTP_TRANSPORT, JSON, USER_AGENT, redditApiKey, redditApiSecret);
     }
 
     @Nullable
-    public Listing subreddit(@NotNull String subreddit) throws IOException {
-        RealThing thing = request("https://oauth.reddit.com/r/" + subreddit +"/new", RealThing.class);
+    public Listing subreddit(@NotNull String subreddit) throws IOException, URISyntaxException {
+        return subreddit(subreddit, null);
+    }
+
+    @Nullable
+    public Listing subreddit(@NotNull String subreddit, @Nullable String afterName) throws IOException, URISyntaxException {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("https");
+        builder.setHost("oauth.reddit.com");
+        builder.setPath("/r/" + subreddit + "/new");
+        if (afterName != null) {
+            builder.addParameter("before", afterName);
+        }
+
+        RealThing thing = request(builder.build(), RealThing.class);
         return (thing != null) ? thing.forceListing() : null;
     }
 
     @Nullable
-    private <T> T request(@NotNull String endPoint, @NotNull Class<T> expectedData) throws IOException {
+    private <T> T request(@NotNull URI endPoint, @NotNull Class<T> expectedData) throws IOException {
+        System.out.println("Requesting with URI: " + endPoint);
+
         GenericUrl url = new GenericUrl(endPoint);
 
         HttpRequestFactory requestFactory =

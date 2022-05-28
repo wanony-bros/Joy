@@ -7,9 +7,11 @@ import com.wanony.reddit.impl.DefaultRedditClient;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.List;
 
 public class SubredditSample {
-  public static void main(@NotNull String[] args) throws IOException {
+  public static void main(@NotNull String[] args) throws IOException, URISyntaxException {
     String token = JoyBotKt.getProperty("redditToken");
     String secret = JoyBotKt.getProperty("redditSecret");
 
@@ -21,5 +23,15 @@ public class SubredditSample {
     for (Link l : listing.getLinks()) {
       System.out.println(l.url());
     }
+
+    String newestId = listing.getLinks().get(0).name();
+    System.out.println(newestId);
+
+    listing = reddit.subreddit("TwoXChromosomes", newestId);
+
+    assert listing != null;
+
+    List<Link> list = listing.getLinks();
+    System.out.println(list);
   }
 }
