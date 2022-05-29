@@ -55,7 +55,7 @@ fun main() {
             it[id] = getProperty<Long>("wanonyId")
             it[admin] = true
         }
-        Memes.insert {
+        Memes.insertIgnore {
             it[meme] = "funni rat"
             it[content] = "Do you wanna see a funni rat?"
             it[addedBy] = getProperty<Long>("wanonyId")
