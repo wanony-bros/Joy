@@ -14,18 +14,25 @@ import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
+import com.wanony.command.reddit.RedditCommand
 import dev.minn.jda.ktx.events.listener
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.*
 
 class JoyBot(
+    private val jda: JDA,
     private val commands: Map<String, JoyCommand>,
     private val autoCompleteProviders: List<AutocompleteProvider>
 ) {
+    init {
+        updateCommands()
+    }
+
     suspend fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         commands[event.name]?.let {
             it.execute(event)
@@ -39,6 +46,19 @@ class JoyBot(
     fun onCommandAutoCompleteInteraction(event: CommandAutoCompleteInteractionEvent) {
         autoCompleteProviders.firstOrNull {
             it.autoComplete(event)
+        }
+    }
+
+    private fun updateCommands() {
+        listOfNotNull(
+            jda.updateCommands(),
+            jda.getGuildById(getProperty<String>("testGuild"))?.updateCommands()
+        ).forEach { commandUpdateAction ->
+            commands.values.forEach {
+                commandUpdateAction.addCommands(it.commandData)
+            }
+
+            commandUpdateAction.queue()
         }
     }
 }
@@ -56,7 +76,8 @@ fun main() {
         InformationCommand(),
         TimerCommand(),
         MemeCommand(),
-    ).associateBy { it.commandName }
+        //RedditCommand(),
+    ) .associateBy { it.commandName }
 
     val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
         GroupAutocompleteProvider(),
@@ -67,23 +88,12 @@ fun main() {
     val jda = light(token, enableCoroutines = true) {
         intents += listOf(GatewayIntent.GUILD_MEMBERS)
     }
-    val joy = JoyBot(allCommands, allAutocompleteProviders)
+    val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
     jda.listener<SlashCommandInteractionEvent> { event ->
         joy.onSlashCommandInteraction(event)
     }
     jda.listener<CommandAutoCompleteInteractionEvent> { event ->
         joy.onCommandAutoCompleteInteraction(event)
-    }
-
-    listOfNotNull(
-        jda.updateCommands(),
-        jda.getGuildById(getProperty<String>("testGuild"))?.updateCommands()
-    ).forEach { commands ->
-        allCommands.values.forEach {
-            commands.addCommands(it.commandData)
-        }
-
-        commands.queue()
     }
 }
 
