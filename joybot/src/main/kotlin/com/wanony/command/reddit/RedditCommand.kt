@@ -10,6 +10,7 @@ import com.wanony.reddit.impl.DefaultRedditClient
 import dev.minn.jda.ktx.generics.getChannel
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
+import net.dv8tion.jda.internal.utils.PermissionUtil
 import org.jetbrains.exposed.sql.*
 
 private const val FOLLOW_OPERATION_NAME = "follow"
@@ -54,8 +56,9 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                 }
             channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
                     listings.links.forEach {
+                        // TODO check for permissions to send message here
                         channel.sendMessageEmbeds(EmbedBuilder().apply {
-                            setTitle(it.title())
+                            setTitle(it.title()?.take(256))
                             setDescription(
                                 """Posted by ${it.author()} in **/r/${it.subreddit()}**
                                    **Post Permalink**:
@@ -102,20 +105,35 @@ class RedditCommand(val jda: JDA) : JoyCommand {
             event.replyEmbeds(Theme.errorEmbed("Failed to follow $subreddit!\nPlease check if it is already followed in this channel.").build()).queue()
             return
         }
-        channel.sendMessageEmbeds(Theme.successEmbed("Updates from $subreddit will be received in this channel!").build()).queue()
+        // TODO convert to a function, probably
         // TODO if fails, send a message to the author saying no access to channel
+        val joy = event.guild?.getMember(event.jda.selfUser)
+        if (!PermissionUtil.checkPermission(channel.permissionContainer, joy, Permission.MESSAGE_SEND)) {
+            event.replyEmbeds(
+                Theme.errorEmbed(
+                    """Joy does not have permission to send message in ${channel.name}
+                        Please update the permissions and try again!
+                    """.trimIndent()).build()).setEphemeral(true).queue()
+            return
+        }
+
+        channel.sendMessageEmbeds(Theme.successEmbed("Updates from $subreddit will be received in this channel!").build()).queue()
         event.replyEmbeds(Theme.successEmbed("Followed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
 
     private fun unfollowSubreddit(event: SlashCommandInteractionEvent) {
         val subreddit = event.getOption("subreddit")!!.asString
         val channel: GuildMessageChannel = event.getOption("channel")!!.asMessageChannel ?: return
-        DB.transaction {
+        val deleted = DB.transaction {
             RedditNotifications.deleteWhere {
                 RedditNotifications.subreddit eq subreddit and (RedditNotifications.channelId eq channel.id)
             }
         }
-        // TODO catch if not followed in this channel already
+        if (deleted == 0) {
+            event.replyEmbeds(
+                Theme.errorEmbed("$subreddit not followed in ${channel.name}!").build()).setEphemeral(true).queue()
+            return
+        }
         channel.sendMessageEmbeds(Theme.successEmbed("$subreddit unfollowed in this channel!").build()).queue()
         event.replyEmbeds(Theme.successEmbed("Unfollowed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
