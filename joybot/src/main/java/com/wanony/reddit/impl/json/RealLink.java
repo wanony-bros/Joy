@@ -9,6 +9,7 @@ public class RealLink extends Votable implements Link {
   @Key public String id;
   @Key public String name;
   @Key public String author;
+  @Key public String title;
   @Key("author_flair_css_class") public String authorFlairCSSClass;
   @Key("author_flair_text") public String authorFlairText;
   @Key public Boolean clicked;
@@ -38,6 +39,10 @@ public class RealLink extends Votable implements Link {
   @Key public Boolean stickied;
 
   @Override
+  @NotNull
+  public String id() { return id; }
+
+  @Override
   @Nullable // Is actually nullable?
   public String url() {
     return url;
@@ -48,4 +53,30 @@ public class RealLink extends Votable implements Link {
   public String name() {
     return name;
   }
+
+  @Override
+  @Nullable // I dunno really
+  public String author() {
+    return author;
+  }
+
+  @Override
+  @Nullable
+  public String selftext() { return selftext; }
+
+  @Override
+  @Nullable
+  public String subreddit() { return subreddit; }
+
+  @Override
+  @Nullable
+  public String thumbnail() { return thumbnail; }
+
+  @Override
+  @Nullable
+  public String title() { return title; }
+
+  @Override
+  @NotNull
+  public String permalink() { return permalink; }
 }

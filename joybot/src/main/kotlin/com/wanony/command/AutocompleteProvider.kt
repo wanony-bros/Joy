@@ -16,7 +16,7 @@ interface AutocompleteProvider {
         if (event.focusedOption.type != OptionType.STRING) return false
 
         event.replyChoiceStrings(
-            provideOptions(event).filter { it.startsWith(event.focusedOption.value) }
+            provideOptions(event).filter { it.startsWith(event.focusedOption.value, true) }
         ).queue()
         return true
     }

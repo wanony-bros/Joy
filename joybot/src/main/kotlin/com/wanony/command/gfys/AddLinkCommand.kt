@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class AddLinkCommand : JoyCommand {
     override val commandName: String = "addlink"
@@ -89,7 +88,7 @@ class AddLinkCommand : JoyCommand {
                 rollback()
                 return@transaction
             }
-            val member = Member.find { (Members.romanStageName eq idol) and (Members.id eq group.first().id) }
+            val member = Member.find { (Members.romanStageName eq idol) and (Members.groupId eq group.first().id) }
             if (member.empty()) {
                 embedBuilder = Theme.errorEmbed("$idol is not in $groupStr!")
                 rollback()

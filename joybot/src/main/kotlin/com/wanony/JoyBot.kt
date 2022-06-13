@@ -25,9 +25,9 @@ import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.*
 
 class JoyBot(
-    private val jda: JDA,
+    val jda: JDA,
     private val commands: Map<String, JoyCommand>,
-    private val autoCompleteProviders: List<AutocompleteProvider>
+    private val autoCompleteProviders: List<AutocompleteProvider>,
 ) {
     init {
         updateCommands()
@@ -57,14 +57,25 @@ class JoyBot(
             commands.values.forEach {
                 commandUpdateAction.addCommands(it.commandData)
             }
-
             commandUpdateAction.queue()
         }
     }
+
 }
 
 fun main() {
     val token = getProperty<String>("discordAPIToken")
+
+
+    val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
+        GroupAutocompleteProvider(),
+        MemberAutocompleteProvider(),
+        TagAutocompleteProvider(),
+    )
+
+    val jda = light(token, enableCoroutines = true) {
+        intents += listOf(GatewayIntent.GUILD_MEMBERS)
+    }
 
     val allCommands : Map<String, JoyCommand> = listOf(
         AvatarCommand(),
@@ -76,18 +87,9 @@ fun main() {
         InformationCommand(),
         TimerCommand(),
         MemeCommand(),
-        //RedditCommand(),
-    ) .associateBy { it.commandName }
+        RedditCommand(jda),
+    ).associateBy { it.commandName }
 
-    val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
-        GroupAutocompleteProvider(),
-        MemberAutocompleteProvider(),
-        TagAutocompleteProvider(),
-    )
-
-    val jda = light(token, enableCoroutines = true) {
-        intents += listOf(GatewayIntent.GUILD_MEMBERS)
-    }
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
     jda.listener<SlashCommandInteractionEvent> { event ->
         joy.onSlashCommandInteraction(event)
@@ -95,6 +97,7 @@ fun main() {
     jda.listener<CommandAutoCompleteInteractionEvent> { event ->
         joy.onCommandAutoCompleteInteraction(event)
     }
+
 }
 
 /**

@@ -8,7 +8,6 @@ import com.wanony.dao.Groups
 import com.wanony.dao.Members
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 
 class GroupAutocompleteProvider : AutocompleteProvider {
 
@@ -20,7 +19,7 @@ class GroupAutocompleteProvider : AutocompleteProvider {
         val query = if (member != null) {
             Groups.innerJoin(Members).select { Members.romanStageName eq member }
         } else {
-            Groups.slice(Groups.romanName).selectAll()
+            Groups.slice(Groups.romanName).select { Groups.romanName like "${event.focusedOption.value}%" }
         }
         query.limit(25).map {
             it[Groups.romanName]

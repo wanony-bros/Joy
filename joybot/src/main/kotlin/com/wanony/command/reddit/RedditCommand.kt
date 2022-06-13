@@ -1,27 +1,81 @@
 package com.wanony.command.reddit
 
+import com.wanony.DB
+import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.reddit.api.RedditClient
+import com.wanony.dao.RedditNotifications
+import com.wanony.getProperty
+import com.wanony.reddit.api.json.Listing
 import com.wanony.reddit.impl.DefaultRedditClient
+import dev.minn.jda.ktx.generics.getChannel
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.GuildMessageChannel
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
+import org.jetbrains.exposed.sql.*
 
 private const val FOLLOW_OPERATION_NAME = "follow"
 private const val UNFOLLOW_OPERATION_NAME = "unfollow"
 
-class RedditCommand : JoyCommand {
-    lateinit var redditClient: RedditClient
+class RedditCommand(val jda: JDA) : JoyCommand {
+//    lateinit var redditClient: RedditClient
+    private val redditClient = DefaultRedditClient(getProperty("redditToken"), getProperty("redditSecret"))
+    init {
+        checkRedditForUpdates()
+    }
     override val commandName: String = "reddit"
     override val commandData: CommandData = Commands.slash(commandName, "Follow or unfollow a subreddit")
         .addSubcommands(
             SubcommandData(FOLLOW_OPERATION_NAME, "Follow a subreddit")
-                .addOption(OptionType.STRING, "subreddit", "The subreddit to follow", true),
+                .addOption(OptionType.STRING, "subreddit", "The subreddit to follow", true)
+                .addOption(OptionType.CHANNEL, "channel", "The channel to receive updates", true),
             SubcommandData(UNFOLLOW_OPERATION_NAME, "Unfollow a subreddit")
+                .addOption(OptionType.CHANNEL, "channel", "The channel to stop updates from being posted", true)
                 .addOption(OptionType.STRING, "subreddit", "The subreddit to unfollow", true)
         )
+
+    private fun checkRedditForUpdates() = DB.transaction {
+        val subreddits: List<ResultRow> = RedditNotifications.selectAll().toList()
+        subreddits.forEach { row ->
+            val sub = row[RedditNotifications.subreddit]
+            val lastSent = row[RedditNotifications.lastSent]
+            val listings: Listing = redditClient.subreddit(sub, lastSent) ?: return@forEach
+            val mostRecentlySent = listings.links.firstOrNull()?.name() ?: return@forEach
+            val channels =
+                RedditNotifications.slice(RedditNotifications.channelId).select {
+                    RedditNotifications.subreddit eq sub
+                }.map {
+                    it[RedditNotifications.channelId].toLong()
+                }
+            channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+                    listings.links.forEach {
+                        channel.sendMessageEmbeds(EmbedBuilder().apply {
+                            setTitle(it.title())
+                            setDescription(
+                                """Posted by ${it.author()} in **/r/${it.subreddit()}**
+                                   **Post Permalink**:
+                                   https://reddit.com${it.permalink()}
+                                   **${it.url()}**
+                                """.trimIndent()
+                            )
+                        }.build()).queue()
+                        it.url()?.let { url ->
+                            if (url.startsWith("https://gfycat.com/")) {
+                                channel.sendMessage(url).queue()
+                            }
+                        }
+                    }
+                }
+                RedditNotifications.update({ RedditNotifications.subreddit eq sub }) {
+                    it[RedditNotifications.lastSent] = mostRecentlySent
+                }
+        }
+    }
 
     override suspend fun execute(event: SlashCommandInteractionEvent) {
         when(event.subcommandName) {
@@ -31,11 +85,44 @@ class RedditCommand : JoyCommand {
         }
     }
 
-    private fun unfollowSubreddit(event: SlashCommandInteractionEvent) {
+    private fun followSubreddit(event: SlashCommandInteractionEvent) {
+        println(event.name)
         val subreddit = event.getOption("subreddit")!!.asString
+        val channel: GuildMessageChannel = event.getOption("channel")!!.asMessageChannel ?: return
+        val listing: Listing = redditClient.subreddit(subreddit) ?: return subredditNotFoundError(event, subreddit)
+        val newestId = listing.links[0].name()
+        val inserted = DB.transaction {
+            RedditNotifications.insert {
+                it[RedditNotifications.subreddit] = subreddit
+                it[channelId] = channel.id
+                it[lastSent] = newestId
+            }.insertedCount > 0
+        }
+        if (!inserted) {
+            event.replyEmbeds(Theme.errorEmbed("Failed to follow $subreddit!\nPlease check if it is already followed in this channel.").build()).queue()
+            return
+        }
+        channel.sendMessageEmbeds(Theme.successEmbed("Updates from $subreddit will be received in this channel!").build()).queue()
+        // TODO if fails, send a message to the author saying no access to channel
+        event.replyEmbeds(Theme.successEmbed("Followed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
 
-    private fun followSubreddit(event: SlashCommandInteractionEvent) {
+    private fun unfollowSubreddit(event: SlashCommandInteractionEvent) {
         val subreddit = event.getOption("subreddit")!!.asString
+        val channel: GuildMessageChannel = event.getOption("channel")!!.asMessageChannel ?: return
+        DB.transaction {
+            RedditNotifications.deleteWhere {
+                RedditNotifications.subreddit eq subreddit and (RedditNotifications.channelId eq channel.id)
+            }
+        }
+        // TODO catch if not followed in this channel already
+        channel.sendMessageEmbeds(Theme.successEmbed("$subreddit unfollowed in this channel!").build()).queue()
+        event.replyEmbeds(Theme.successEmbed("Unfollowed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
+
+    private fun subredditNotFoundError(event: SlashCommandInteractionEvent, subreddit: String) {
+        event.replyEmbeds(Theme.errorEmbed("No subreddit found called $subreddit").build()).queue()
+    }
+
+
 }
