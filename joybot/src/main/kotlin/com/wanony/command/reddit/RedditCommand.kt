@@ -8,6 +8,7 @@ import com.wanony.getProperty
 import com.wanony.reddit.api.json.Listing
 import com.wanony.reddit.impl.DefaultRedditClient
 import dev.minn.jda.ktx.generics.getChannel
+import kotlinx.coroutines.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
@@ -20,50 +21,55 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.internal.utils.PermissionUtil
 import org.jetbrains.exposed.sql.*
+import java.util.concurrent.TimeUnit
 
 private const val FOLLOW_OPERATION_NAME = "follow"
 private const val UNFOLLOW_OPERATION_NAME = "unfollow"
 
 class RedditCommand(val jda: JDA) : JoyCommand {
-//    lateinit var redditClient: RedditClient
     private val redditClient = DefaultRedditClient(getProperty("redditToken"), getProperty("redditSecret"))
-    init {
-        checkRedditForUpdates()
-    }
     override val commandName: String = "reddit"
     override val commandData: CommandData = Commands.slash(commandName, "Follow or unfollow a subreddit")
         .addSubcommands(
             SubcommandData(FOLLOW_OPERATION_NAME, "Follow a subreddit")
-                .addOption(OptionType.STRING, "subreddit", "The subreddit to follow", true)
-                .addOption(OptionType.CHANNEL, "channel", "The channel to receive updates", true),
+                .addOption(OptionType.STRING, "subreddit", "The subreddit to follow", true),
             SubcommandData(UNFOLLOW_OPERATION_NAME, "Unfollow a subreddit")
-                .addOption(OptionType.CHANNEL, "channel", "The channel to stop updates from being posted", true)
                 .addOption(OptionType.STRING, "subreddit", "The subreddit to unfollow", true)
         )
 
-    private fun checkRedditForUpdates() = DB.transaction {
+    override fun setup() {
+        CoroutineScope(Dispatchers.Default).launch {
+            checkRedditForUpdates(false) // update most recent posts, so we don't get spammed on restart
+            while (true) {
+                delay(TimeUnit.MINUTES.toMillis(5))
+                checkRedditForUpdates(true)
+            }
+        }
+    }
+
+    private fun checkRedditForUpdates(post: Boolean) = DB.transaction {
         val subreddits: List<ResultRow> = RedditNotifications.selectAll().toList()
         subreddits.forEach { row ->
             val sub = row[RedditNotifications.subreddit]
             val lastSent = row[RedditNotifications.lastSent]
             val listings: Listing = redditClient.subreddit(sub, lastSent) ?: return@forEach
             val mostRecentlySent = listings.links.firstOrNull()?.name() ?: return@forEach
-            val channels =
-                RedditNotifications.slice(RedditNotifications.channelId).select {
-                    RedditNotifications.subreddit eq sub
-                }.map {
-                    it[RedditNotifications.channelId].toLong()
-                }
-            channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+            if (post) {
+                val channels =
+                    RedditNotifications.slice(RedditNotifications.channelId).select {
+                        RedditNotifications.subreddit eq sub
+                    }.map {
+                        it[RedditNotifications.channelId].toLong()
+                    }
+                channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
                     listings.links.forEach {
-                        // TODO check for permissions to send message here
                         channel.sendMessageEmbeds(EmbedBuilder().apply {
                             setTitle(it.title()?.take(256))
                             setDescription(
                                 """Posted by ${it.author()} in **/r/${it.subreddit()}**
                                    **Post Permalink**:
-                                   https://reddit.com${it.permalink()}
-                                   **${it.url()}**
+                                   https://www.reddit.com${it.permalink()}
+                                   ${if (it.url()?.trim()?.endsWith(it.permalink().trim()) == true) "" else "**${it.url()}**"}
                                 """.trimIndent()
                             )
                         }.build()).queue()
@@ -74,9 +80,10 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                         }
                     }
                 }
-                RedditNotifications.update({ RedditNotifications.subreddit eq sub }) {
-                    it[RedditNotifications.lastSent] = mostRecentlySent
-                }
+            }
+            RedditNotifications.update({ RedditNotifications.subreddit eq sub }) {
+                it[RedditNotifications.lastSent] = mostRecentlySent
+            }
         }
     }
 
@@ -91,7 +98,7 @@ class RedditCommand(val jda: JDA) : JoyCommand {
     private fun followSubreddit(event: SlashCommandInteractionEvent) {
         println(event.name)
         val subreddit = event.getOption("subreddit")!!.asString
-        val channel: GuildMessageChannel = event.getOption("channel")!!.asMessageChannel ?: return
+        val channel = event.channel as GuildMessageChannel
         val listing: Listing = redditClient.subreddit(subreddit) ?: return subredditNotFoundError(event, subreddit)
         val newestId = listing.links[0].name()
         val inserted = DB.transaction {
@@ -105,8 +112,6 @@ class RedditCommand(val jda: JDA) : JoyCommand {
             event.replyEmbeds(Theme.errorEmbed("Failed to follow $subreddit!\nPlease check if it is already followed in this channel.").build()).queue()
             return
         }
-        // TODO convert to a function, probably
-        // TODO if fails, send a message to the author saying no access to channel
         val joy = event.guild?.getMember(event.jda.selfUser)
         if (!PermissionUtil.checkPermission(channel.permissionContainer, joy, Permission.MESSAGE_SEND)) {
             event.replyEmbeds(
@@ -123,7 +128,7 @@ class RedditCommand(val jda: JDA) : JoyCommand {
 
     private fun unfollowSubreddit(event: SlashCommandInteractionEvent) {
         val subreddit = event.getOption("subreddit")!!.asString
-        val channel: GuildMessageChannel = event.getOption("channel")!!.asMessageChannel ?: return
+        val channel = event.channel
         val deleted = DB.transaction {
             RedditNotifications.deleteWhere {
                 RedditNotifications.subreddit eq subreddit and (RedditNotifications.channelId eq channel.id)
@@ -134,7 +139,6 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                 Theme.errorEmbed("$subreddit not followed in ${channel.name}!").build()).setEphemeral(true).queue()
             return
         }
-        channel.sendMessageEmbeds(Theme.successEmbed("$subreddit unfollowed in this channel!").build()).queue()
         event.replyEmbeds(Theme.successEmbed("Unfollowed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
 

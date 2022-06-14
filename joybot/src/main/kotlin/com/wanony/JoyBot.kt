@@ -61,11 +61,16 @@ class JoyBot(
         }
     }
 
+    fun onSetup() {
+        commands.values.forEach {
+            it.setup()
+        }
+    }
+
 }
 
 fun main() {
     val token = getProperty<String>("discordAPIToken")
-
 
     val allAutocompleteProviders : List<AutocompleteProvider> = listOf(
         GroupAutocompleteProvider(),
@@ -91,12 +96,15 @@ fun main() {
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
+    joy.onSetup()
+    println("setup is finished boss")
     jda.listener<SlashCommandInteractionEvent> { event ->
         joy.onSlashCommandInteraction(event)
     }
     jda.listener<CommandAutoCompleteInteractionEvent> { event ->
         joy.onCommandAutoCompleteInteraction(event)
     }
+    println("listeners are listening boss")
 
 }
 
