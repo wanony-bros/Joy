@@ -9,6 +9,7 @@ import com.wanony.command.gfys.AddLinkCommand
 import com.wanony.command.gfys.GfyCommand
 import com.wanony.command.gfys.RandomLinkCommand
 import com.wanony.command.gfys.TimerCommand
+import com.wanony.command.instagram.InstagramCommand
 import com.wanony.command.manage.ManageCommand
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
@@ -93,6 +94,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
+        InstagramCommand(),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
