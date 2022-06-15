@@ -75,7 +75,8 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                         channel.sendMessageEmbeds(EmbedBuilder().apply {
                             setTitle(it.title()?.take(256))
                             setDescription(
-                                """Posted by ${it.author()} in **/r/${it.subreddit()}**
+                                """
+                                   Posted by ${it.author()} in **/r/${it.subreddit()}**
                                    **Post Permalink**:
                                    https://www.reddit.com${it.permalink()}
                                    ${if (it.url()?.trim()?.endsWith(it.permalink().trim()) == true) "" else "**${it.url()}**"}
