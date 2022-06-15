@@ -29,10 +29,17 @@ import java.util.*
 
 class JoyBot(
     val jda: JDA,
-    private val commands: Map<String, JoyCommand>,
+    commands: Map<String, JoyCommand>,
     private val autoCompleteProviders: List<AutocompleteProvider>,
 ) {
+    val commands: Map<String, JoyCommand>
+
     init {
+        this.commands = commands.filter {
+            it.value.setup().also { success ->
+                if (!success) println("Disabling command '${it.value.commandName}' - setup returned false.")
+            }
+        }
         updateCommands()
     }
 
@@ -61,12 +68,6 @@ class JoyBot(
                 commandUpdateAction.addCommands(it.commandData)
             }
             commandUpdateAction.queue()
-        }
-    }
-
-    fun onSetup() {
-        commands.values.forEach {
-            it.setup()
         }
     }
 }
@@ -104,7 +105,6 @@ fun main() {
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
-    joy.onSetup()
     println("setup is finished boss")
     jda.listener<SlashCommandInteractionEvent> { event ->
         joy.onSlashCommandInteraction(event)

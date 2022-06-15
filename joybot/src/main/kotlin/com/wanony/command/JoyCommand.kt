@@ -9,5 +9,11 @@ interface JoyCommand {
 
     suspend fun execute(event: SlashCommandInteractionEvent)
 
-    fun setup() = Unit
+    /**
+     * Sets up the command, could be connecting to apis, reading credentials or anything else.
+     *
+     * This method should return true if the command was set up correctly or false otherwise.
+     * On returning false this command will not be registered.
+     */
+    fun setup() : Boolean = true
 }

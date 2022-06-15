@@ -7,6 +7,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.ObjectParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.wanony.reddit.api.RedditClient;
 import com.wanony.reddit.api.json.Listing;
 import com.wanony.reddit.impl.json.RealThing;
 import com.wanony.reddit.impl.json.ThingTypeAdapter;
@@ -18,7 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class DefaultRedditClient {
+public class DefaultRedditClient implements RedditClient {
     private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
 
     @NotNull
@@ -45,11 +46,13 @@ public class DefaultRedditClient {
         this.accessTokenProvider = new AccessTokenProvider(HTTP_TRANSPORT, JSON, USER_AGENT, redditApiKey, redditApiSecret);
     }
 
+    @Override
     @Nullable
     public Listing subreddit(@NotNull String subreddit) throws IOException, URISyntaxException {
         return subreddit(subreddit, null);
     }
 
+    @Override
     @Nullable
     public Listing subreddit(@NotNull String subreddit, @Nullable String afterName) throws IOException, URISyntaxException {
         URIBuilder builder = new URIBuilder();

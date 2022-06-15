@@ -5,14 +5,17 @@ import com.wanony.Theme
 import com.wanony.checkGuildReplyPermissions
 import com.wanony.command.JoyCommand
 import com.wanony.dao.RedditNotifications
-import com.wanony.getProperty
+import com.wanony.findProperty
+import com.wanony.reddit.api.RedditClient
 import com.wanony.reddit.api.json.Listing
 import com.wanony.reddit.impl.DefaultRedditClient
 import dev.minn.jda.ktx.generics.getChannel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -20,7 +23,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import net.dv8tion.jda.internal.utils.PermissionUtil
 import org.jetbrains.exposed.sql.*
 import java.util.concurrent.TimeUnit
 
@@ -28,7 +30,7 @@ private const val FOLLOW_OPERATION_NAME = "follow"
 private const val UNFOLLOW_OPERATION_NAME = "unfollow"
 
 class RedditCommand(val jda: JDA) : JoyCommand {
-    private val redditClient = DefaultRedditClient(getProperty("redditToken"), getProperty("redditSecret"))
+    private lateinit var redditClient: RedditClient
     override val commandName: String = "reddit"
     override val commandData: CommandData = Commands.slash(commandName, "Follow or unfollow a subreddit")
         .addSubcommands(
@@ -38,7 +40,11 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                 .addOption(OptionType.STRING, "subreddit", "The subreddit to unfollow", true)
         )
 
-    override fun setup() {
+    override fun setup() : Boolean {
+        val token = findProperty<String>("redditToken") ?: return false
+        val secret = findProperty<String>("redditSecret") ?: return false
+        redditClient = DefaultRedditClient(token, secret)
+
         CoroutineScope(Dispatchers.Default).launch {
             checkRedditForUpdates(false) // update most recent posts, so we don't get spammed on restart
             while (true) {
@@ -46,6 +52,8 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                 checkRedditForUpdates(true)
             }
         }
+
+        return true
     }
 
     private fun checkRedditForUpdates(post: Boolean) = DB.transaction {
