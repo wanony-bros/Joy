@@ -19,9 +19,12 @@ import dev.minn.jda.ktx.events.listener
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
 import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.Permission
+import net.dv8tion.jda.api.entities.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.internal.utils.PermissionUtil
 import java.util.*
 
 class JoyBot(
@@ -66,7 +69,12 @@ class JoyBot(
             it.setup()
         }
     }
+}
 
+fun SlashCommandInteractionEvent.checkGuildReplyPermissions() : Boolean {
+    val replyChannel = (channel as? GuildMessageChannel) ?: return false
+    val joy = guild?.getMember(jda.selfUser) ?: return false
+    return !PermissionUtil.checkPermission(replyChannel.permissionContainer, joy, Permission.MESSAGE_SEND)
 }
 
 fun main() {

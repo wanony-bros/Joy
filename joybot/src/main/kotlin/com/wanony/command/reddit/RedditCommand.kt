@@ -2,6 +2,7 @@ package com.wanony.command.reddit
 
 import com.wanony.DB
 import com.wanony.Theme
+import com.wanony.checkGuildReplyPermissions
 import com.wanony.command.JoyCommand
 import com.wanony.dao.RedditNotifications
 import com.wanony.getProperty
@@ -96,10 +97,20 @@ class RedditCommand(val jda: JDA) : JoyCommand {
     }
 
     private fun followSubreddit(event: SlashCommandInteractionEvent) {
-        println(event.name)
         val subreddit = event.getOption("subreddit")!!.asString
-        val channel = event.channel as GuildMessageChannel
-        val listing: Listing = redditClient.subreddit(subreddit) ?: return subredditNotFoundError(event, subreddit)
+        val channel = event.channel as? GuildMessageChannel ?: return replyGuildRequiredError(event)
+
+        if (event.checkGuildReplyPermissions()) {
+            event.replyEmbeds(
+                Theme.errorEmbed(
+                    """Joy does not have permission to send message in ${channel.name}
+                        Please update the permissions and try again!
+                    """.trimIndent()).build()).setEphemeral(true).queue()
+            return
+        }
+
+
+        val listing: Listing = redditClient.subreddit(subreddit) ?: return replySubredditNotFoundError(event, subreddit)
         val newestId = listing.links[0].name()
         val inserted = DB.transaction {
             RedditNotifications.insert {
@@ -112,18 +123,8 @@ class RedditCommand(val jda: JDA) : JoyCommand {
             event.replyEmbeds(Theme.errorEmbed("Failed to follow $subreddit!\nPlease check if it is already followed in this channel.").build()).queue()
             return
         }
-        val joy = event.guild?.getMember(event.jda.selfUser)
-        if (!PermissionUtil.checkPermission(channel.permissionContainer, joy, Permission.MESSAGE_SEND)) {
-            event.replyEmbeds(
-                Theme.errorEmbed(
-                    """Joy does not have permission to send message in ${channel.name}
-                        Please update the permissions and try again!
-                    """.trimIndent()).build()).setEphemeral(true).queue()
-            return
-        }
 
-        channel.sendMessageEmbeds(Theme.successEmbed("Updates from $subreddit will be received in this channel!").build()).queue()
-        event.replyEmbeds(Theme.successEmbed("Followed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
+        event.replyEmbeds(Theme.successEmbed("Updates from $subreddit will be received in this channel!").build()).queue()
     }
 
     private fun unfollowSubreddit(event: SlashCommandInteractionEvent) {
@@ -142,9 +143,11 @@ class RedditCommand(val jda: JDA) : JoyCommand {
         event.replyEmbeds(Theme.successEmbed("Unfollowed $subreddit in ${channel.name}").build()).setEphemeral(true).queue()
     }
 
-    private fun subredditNotFoundError(event: SlashCommandInteractionEvent, subreddit: String) {
-        event.replyEmbeds(Theme.errorEmbed("No subreddit found called $subreddit").build()).queue()
+    private fun replySubredditNotFoundError(event: SlashCommandInteractionEvent, subreddit: String) {
+        event.replyEmbeds(Theme.errorEmbed("No subreddit found called $subreddit").build()).setEphemeral(true).queue()
     }
 
-
+    private fun replyGuildRequiredError(event: SlashCommandInteractionEvent) {
+        event.replyEmbeds(Theme.errorEmbed("This command can only be used within a server.").build()).setEphemeral(true).queue()
+    }
 }
