@@ -15,6 +15,7 @@ import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
 import com.wanony.command.reddit.RedditCommand
+import com.wanony.command.twitter.TwitterCommand
 import dev.minn.jda.ktx.events.listener
 import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
@@ -102,6 +103,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
+        TwitterCommand(),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)

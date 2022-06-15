@@ -39,6 +39,9 @@ dependencies {
     implementation("com.google.oauth-client:google-oauth-client:1.33.3")
     implementation("com.google.oauth-client:google-oauth-client-jetty:1.33.3")
 
+    implementation("com.twitter:twitter-api-java-sdk:1.2.4")
+
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
