@@ -50,6 +50,10 @@ fun main() {
     redditToken.ifNotBlank { properties.setProperty("redditToken", it) }
     val redditSecret = askForValue("(Optional) What is your Reddit API secret?", true)
     redditSecret.ifNotBlank { properties.setProperty("redditSecret", it) }
+    val instagramUser = askForValue("(Optional) What is your Instagram username?", true)
+    instagramUser.ifNotBlank { properties.setProperty("instagramUser", it) }
+    val instagramPassword = askForValue("(Optional) What is your Instagram password?", true)
+    instagramPassword.ifNotBlank { properties.setProperty("instagramPassword", it) }
 
     val outStream = file.outputStream()
     properties.store(outStream, "Misc properties")

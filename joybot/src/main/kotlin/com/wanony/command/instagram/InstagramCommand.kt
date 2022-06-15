@@ -1,5 +1,6 @@
 package com.wanony.command.instagram
 
+import com.fasterxml.jackson.databind.BeanDescription
 import com.github.instagram4j.instagram4j.IGClient
 import com.github.instagram4j.instagram4j.IGClient.Builder.LoginHandler
 import com.github.instagram4j.instagram4j.models.media.timeline.ImageCarouselItem
@@ -7,6 +8,7 @@ import com.github.instagram4j.instagram4j.models.media.timeline.TimelineCarousel
 import com.github.instagram4j.instagram4j.models.media.timeline.TimelineImageMedia
 import com.github.instagram4j.instagram4j.models.media.timeline.TimelineVideoMedia
 import com.github.instagram4j.instagram4j.models.media.timeline.VideoCarouselItem
+import com.github.instagram4j.instagram4j.models.user.User
 import com.github.instagram4j.instagram4j.requests.feed.FeedUserRequest
 import com.github.instagram4j.instagram4j.requests.users.UsersUsernameInfoRequest
 import com.github.instagram4j.instagram4j.responses.accounts.LoginResponse
@@ -73,19 +75,37 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
         }
     }
 
-    private fun handleTimelineVideoMedia(media: TimelineVideoMedia) {
+    private fun instagramEmbed(user: User,
+                               captionText: String,
+                               permalink: String,
+                               imageUrl: String?
+    ): EmbedBuilder = EmbedBuilder().apply {
+        setTitle(MarkdownSanitizer.escape(user.full_name))
+        setDescription("${MarkdownSanitizer.escape(captionText)}\n${permalink}")
+        setFooter(
+            "Posted to Instagram by ${MarkdownSanitizer.escape(user.username)}",
+            user.profile_pic_url
+        )
+        setImage(imageUrl)
+    }
+
+    private fun handleTimelineVideoMedia(media: TimelineVideoMedia): EmbedBuilder {
         val videoUrl = media.video_versions[0].url
+        // TODO check if media.code is the url to the post, otherwise update it
+        // TODO check if the video should be posted, or ignore for now, instead post thumbnail
+        return instagramEmbed(media.user, media.caption.text, media.code, videoUrl)
     }
 
-    private fun handleTimelineImageMedia(media: TimelineImageMedia) {
+    private fun handleTimelineImageMedia(media: TimelineImageMedia): EmbedBuilder {
         val imageUrl = media.image_versions2.candidates[0].url
+        return instagramEmbed(media.user, media.caption.text, media.code, videoUrl)
     }
 
-    private fun handleTimelineCarousel(media: TimelineCarouselMedia) {
+    private fun handleTimelineCarousel(media: TimelineCarouselMedia): List<EmbedBuilder> {
         val mediaUrls = media.carousel_media.map {
             when(it) {
-                is VideoCarouselItem -> "boss"// handle this
-                is ImageCarouselItem -> "man"// handle this
+                is VideoCarouselItem -> handleTimelineVideoMedia(it) // handle this
+                is ImageCarouselItem -> handleTimelineImageMedia(it) // handle this
                 else -> "RANDOM FILTER ENABLED."
             }
         }
