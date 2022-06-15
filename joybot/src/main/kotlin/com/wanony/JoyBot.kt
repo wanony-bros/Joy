@@ -94,7 +94,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
-        InstagramCommand(),
+        InstagramCommand(jda),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
