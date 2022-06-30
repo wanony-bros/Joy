@@ -38,7 +38,8 @@ fun main() {
         Tags,
         Users,
         Memes,
-        RedditNotifications
+        RedditNotifications,
+        InstagramNotifications
     )
 
     transaction {
