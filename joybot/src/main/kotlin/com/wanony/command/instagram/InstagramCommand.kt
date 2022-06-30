@@ -1,6 +1,5 @@
 package com.wanony.command.instagram
 
-import com.fasterxml.jackson.databind.BeanDescription
 import com.github.instagram4j.instagram4j.IGClient
 import com.github.instagram4j.instagram4j.IGClient.Builder.LoginHandler
 import com.github.instagram4j.instagram4j.models.media.timeline.ImageCarouselItem
@@ -18,11 +17,13 @@ import com.github.instagram4j.instagram4j.utils.IGChallengeUtils
 import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.dao.InstagramNotification
 import com.wanony.dao.InstagramNotifications
-import com.wanony.dao.RedditNotifications
 import com.wanony.getProperty
 import dev.minn.jda.ktx.generics.getChannel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.MessageChannel
@@ -33,8 +34,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 private const val FOLLOW_OPERATION_NAME = "follow"
@@ -52,6 +53,15 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
                 .addOption(OptionType.STRING, "username", "The user to unfollow", true)
         )
 
+    override fun setup() {
+        CoroutineScope(Dispatchers.Default).launch {
+            checkInstagramForUpdates(false) // update most recent posts, so we don't get spammed on restart
+            while (true) {
+                delay(TimeUnit.MINUTES.toMillis(5))
+                checkInstagramForUpdates(true)
+            }
+        }
+    }
     private var challengeHandler =
         LoginHandler { client: IGClient, response: LoginResponse ->
             IGChallengeUtils.resolveChallenge(client, response) {
@@ -81,42 +91,70 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
                                imageUrl: String?
     ): EmbedBuilder = EmbedBuilder().apply {
         setTitle(MarkdownSanitizer.escape(user.full_name))
-        setDescription("${MarkdownSanitizer.escape(captionText)}\n${permalink}")
+        setDescription("${MarkdownSanitizer.escape(captionText)}\nhttps://www.instagram.com/p/${permalink}/")
         setFooter(
             "Posted to Instagram by ${MarkdownSanitizer.escape(user.username)}",
             user.profile_pic_url
         )
         setImage(imageUrl)
+        setColor(INSTAGRAM_COLOUR)
     }
 
-    private fun handleTimelineVideoMedia(media: TimelineVideoMedia): EmbedBuilder {
+    private fun handleTimelineVideoMedia(media: TimelineVideoMedia, channels: List<Long>) {
         val videoUrl = media.video_versions[0].url
         // TODO check if media.code is the url to the post, otherwise update it
         // TODO check if the video should be posted, or ignore for now, instead post thumbnail
-        return instagramEmbed(media.user, media.caption.text, media.code, videoUrl)
+        val embed = instagramEmbed(media.user, media.caption.text, media.code, videoUrl)
+        channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+            channel.sendMessageEmbeds(embed.build()).queue()
+        }
     }
 
-    private fun handleTimelineImageMedia(media: TimelineImageMedia): EmbedBuilder {
+    private fun handleTimelineImageMedia(media: TimelineImageMedia, channels: List<Long>) {
         val imageUrl = media.image_versions2.candidates[0].url
-        return instagramEmbed(media.user, media.caption.text, media.code, videoUrl)
+        val embed = instagramEmbed(media.user, media.caption.text, media.code, imageUrl)
+        channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+            channel.sendMessageEmbeds(embed.build()).queue()
+        }
     }
 
-    private fun handleTimelineCarousel(media: TimelineCarouselMedia): List<EmbedBuilder> {
-        val mediaUrls = media.carousel_media.map {
+    private fun handleCarouselVideo(item: VideoCarouselItem): String? {
+        return item.video_versions[0].url
+    }
+
+    private fun handleCarouselImage(item: ImageCarouselItem): String? {
+        return item.image_versions2.candidates[0].url
+    }
+
+    private fun handleTimelineCarousel(media: TimelineCarouselMedia, channels: List<Long>) {
+        val firstUrl: String? = when(val firstMedia = media.carousel_media.removeFirst()) {
+            is VideoCarouselItem -> handleCarouselVideo(firstMedia)
+            is ImageCarouselItem -> handleCarouselImage(firstMedia)
+            else -> "https://cdn.discordapp.com/attachments/783047563384455221/990667897540055060/IMG_1823.jpg" // TODO remove this temp image
+        }
+        val mediaUrls: List<String?> = media.carousel_media.map {
             when(it) {
-                is VideoCarouselItem -> handleTimelineVideoMedia(it) // handle this
-                is ImageCarouselItem -> handleTimelineImageMedia(it) // handle this
-                else -> "RANDOM FILTER ENABLED."
+                is VideoCarouselItem -> handleCarouselVideo(it)
+                is ImageCarouselItem -> handleCarouselImage(it)
+                else -> null
+            }
+        }
+        val embed = instagramEmbed(media.user, media.caption.text, media.code, firstUrl)
+        channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+            channel.sendMessageEmbeds(embed.build()).queue()
+            // Discord will embed up to 4 images, so we chunk into 4
+            mediaUrls.chunked(4).forEach {
+                channel.sendMessage(it.joinToString("\n")).queue()
             }
         }
     }
 
-    private fun checkInstagramForUpdates() = DB.transaction {
+    private fun checkInstagramForUpdates(post: Boolean) = DB.transaction {
         val users: List<ResultRow> = InstagramNotifications.selectAll().toList()
         users.forEach { row ->
             val userId = row[InstagramNotifications.userId].toLong()
-            val maxId = row[InstagramNotifications.lastSent]
-            val userFeed: FeedUserResponse = FeedUserRequest(userId, maxId).execute(instagramClient).join()
+            val lastSentId = row[InstagramNotifications.lastSent] ?: "0"
+            val userFeed: FeedUserResponse = FeedUserRequest(userId).execute(instagramClient).join()
             if (userFeed.items.size == 0) return@forEach
             val channels =
                 InstagramNotifications.slice(InstagramNotifications.channelId).select {
@@ -124,16 +162,15 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
                 }.map {
                     it[InstagramNotifications.channelId].toLong()
                 }
-            userFeed.items.forEach {
-                val processedItem = when(it) {
-                    // TODO implement these
-                    is TimelineVideoMedia -> handleTimelineVideoMedia(it)
-                    is TimelineImageMedia -> handleTimelineImageMedia(it)
-                    is TimelineCarouselMedia -> handleTimelineCarousel(it)
-                    else -> "FUCK THE POLICE."
-                }
-                channels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
-                    channel.sendMessageEmbeds(processedItem)
+            if (post) {
+                userFeed.items.takeWhile { it.id != lastSentId }.forEach {
+                    when(it) {
+                        // TODO implement these
+                        is TimelineVideoMedia -> handleTimelineVideoMedia(it, channels)
+                        is TimelineImageMedia -> handleTimelineImageMedia(it, channels)
+                        is TimelineCarouselMedia -> handleTimelineCarousel(it, channels)
+                        else -> Theme.errorEmbed("Media failed") // TODO fix this, it's garbage
+                    }
                 }
             }
 
