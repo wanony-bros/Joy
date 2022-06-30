@@ -53,7 +53,7 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
                 .addOption(OptionType.STRING, "username", "The user to unfollow", true)
         )
 
-    override fun setup() {
+    override fun setup(): Boolean {
         CoroutineScope(Dispatchers.Default).launch {
             checkInstagramForUpdates(false) // update most recent posts, so we don't get spammed on restart
             while (true) {
@@ -61,6 +61,8 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
                 checkInstagramForUpdates(true)
             }
         }
+
+        return true
     }
     private var challengeHandler =
         LoginHandler { client: IGClient, response: LoginResponse ->
