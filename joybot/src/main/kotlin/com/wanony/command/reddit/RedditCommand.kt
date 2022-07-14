@@ -2,8 +2,9 @@ package com.wanony.command.reddit
 
 import com.wanony.DB
 import com.wanony.Theme
-import com.wanony.checkGuildReplyPermissions
 import com.wanony.command.JoyCommand
+import com.wanony.command.checkGuildReplyPermissions
+import com.wanony.command.replyGuildRequiredError
 import com.wanony.dao.RedditNotifications
 import com.wanony.findProperty
 import com.wanony.reddit.api.RedditClient
@@ -107,7 +108,7 @@ class RedditCommand(val jda: JDA) : JoyCommand {
 
     private fun followSubreddit(event: SlashCommandInteractionEvent) {
         val subreddit = event.getOption("subreddit")!!.asString
-        val channel = event.channel as? GuildMessageChannel ?: return replyGuildRequiredError(event)
+        val channel = event.channel as? GuildMessageChannel ?: return event.replyGuildRequiredError()
 
         if (event.checkGuildReplyPermissions()) {
             event.replyEmbeds(
@@ -156,7 +157,4 @@ class RedditCommand(val jda: JDA) : JoyCommand {
         event.replyEmbeds(Theme.errorEmbed("No subreddit found called $subreddit").build()).setEphemeral(true).queue()
     }
 
-    private fun replyGuildRequiredError(event: SlashCommandInteractionEvent) {
-        event.replyEmbeds(Theme.errorEmbed("This command can only be used within a server.").build()).setEphemeral(true).queue()
-    }
 }

@@ -73,11 +73,6 @@ class JoyBot(
     }
 }
 
-fun SlashCommandInteractionEvent.checkGuildReplyPermissions() : Boolean {
-    val replyChannel = (channel as? GuildMessageChannel) ?: return false
-    val joy = guild?.getMember(jda.selfUser) ?: return false
-    return !PermissionUtil.checkPermission(replyChannel.permissionContainer, joy, Permission.MESSAGE_SEND)
-}
 
 fun main() {
     val token = getProperty<String>("discordAPIToken")
@@ -103,7 +98,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
-        TwitterCommand(),
+        TwitterCommand(jda),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
