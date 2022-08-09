@@ -2,6 +2,7 @@ package com.wanony
 
 import com.wanony.command.AutocompleteProvider
 import com.wanony.command.JoyCommand
+import com.wanony.command.auditing.AuditingCommand
 import com.wanony.command.autocomplete.GroupAutocompleteProvider
 import com.wanony.command.autocomplete.MemberAutocompleteProvider
 import com.wanony.command.autocomplete.TagAutocompleteProvider
@@ -95,7 +96,7 @@ fun main() {
     val allCommands : Map<String, JoyCommand> = listOf(
         AvatarCommand(),
         SuggestCommand(),
-        AddLinkCommand(),
+        AddLinkCommand(jda),
         RandomLinkCommand(),
         ManageCommand(),
         GfyCommand(),
@@ -104,6 +105,7 @@ fun main() {
         MemeCommand(),
         RedditCommand(jda),
         InstagramCommand(jda),
+        AuditingCommand(jda),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders)

@@ -4,14 +4,18 @@ import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
 import com.wanony.dao.*
+import com.wanony.getProperty
+import dev.minn.jda.ktx.generics.getChannel
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.entities.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import org.jetbrains.exposed.sql.*
 
-class AddLinkCommand : JoyCommand {
+class AddLinkCommand(val jda: JDA) : JoyCommand {
     override val commandName: String = "addlink"
     override val commandData: CommandData =
         Commands.slash(commandName, "Add a link and contribute to Joy's database!")
@@ -50,6 +54,7 @@ class AddLinkCommand : JoyCommand {
                         it[linkId] = linkWithTag.first.id
                         it[tagId] = tag.first().id
                     }
+                    // TODO give some idea what tags are added to links in auditing
                 }
             }
 
@@ -73,7 +78,10 @@ class AddLinkCommand : JoyCommand {
                     Link.new {
                         this.link = linkStr
                         this.addedBy = getOrCreateUser(event.user.idLong)
+                    }.also { // TODO verify this works the way I intend it to
+                        postToAuditingChannels(linkStr, event.user.name, event.user.id, event.user.effectiveAvatarUrl, groupStr, idol)
                     }
+
                 }
             }
 
@@ -163,4 +171,35 @@ class AddLinkCommand : JoyCommand {
             null
         }
     }
+
+    // TODO check if we should/can move it to the auditing command file
+    private fun postToAuditingChannels(link: String, user: String, userId: String, userAvatar: String, group: String, idol: String) {
+        val detailedEmbed = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
+            this.title = "User ID: `$userId`\nGroup: `$group`\nIdol: `$idol`\nLink: $link"
+            this.footer {
+                this.iconUrl = userAvatar
+                this.name = "Added by $user"
+            }
+        }.build()
+
+        // post to the main auditing channel
+        val mainAuditingChannel = jda.getChannel<MessageChannel>(getProperty<String>("mainAuditingChannel"))
+
+        mainAuditingChannel?.sendMessageEmbeds(detailedEmbed)?.queue()
+        mainAuditingChannel?.sendMessage(link)?.queue()
+
+        // send less detailed auditing to all auditing channels
+        val authorRemovedEmbed = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
+            this.title = "Group: `$group`\nIdol: `$idol`\nLink: $link"
+        }.build()
+        val auditingChannels = DB.transaction {
+            AuditingChannels.selectAll().map { it[AuditingChannels.channelId].toLong() } }
+
+        auditingChannels.mapNotNull { c -> jda.getChannel<MessageChannel>(c) }.forEach { channel ->
+            channel.sendMessageEmbeds(authorRemovedEmbed).queue()
+            channel.sendMessage(link).queue()
+        }
+    }
+
+
 }

@@ -39,7 +39,8 @@ fun main() {
         Users,
         Memes,
         RedditNotifications,
-        InstagramNotifications
+        InstagramNotifications,
+        AuditingChannels,
     )
 
     transaction {
