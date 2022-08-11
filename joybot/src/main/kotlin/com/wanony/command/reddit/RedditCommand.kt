@@ -118,7 +118,6 @@ class RedditCommand(val jda: JDA) : JoyCommand {
             return
         }
 
-
         val listing: Listing = redditClient.subreddit(subreddit) ?: return replySubredditNotFoundError(event, subreddit)
         val newestId = listing.links[0].name()
         val inserted = DB.transaction {

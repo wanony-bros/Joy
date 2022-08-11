@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 object RedditNotifications : IntIdTable() {
     val channelId = varchar("channelId", 255)
     val subreddit = varchar("subbreddit", 255)
-    val lastSent  = varchar("lastSent", 255)
+    val lastSent  = varchar("lastSent", 255).nullable()
 
     init {
         uniqueIndex("channel_reddit", channelId, subreddit)
