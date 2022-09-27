@@ -56,6 +56,8 @@ dependencies {
 
     implementation("com.github.instagram4j:instagram4j:2.0.7")
 
+    implementation("com.github.twitch4j:twitch4j:1.12.0")
+
     add("webscrapeImplementation", "org.jsoup:jsoup:1.14.3")
     add("webscrapeImplementation", "org.seleniumhq.selenium:selenium-java:2.41.0")
     add("webscrapeImplementation", "org.seleniumhq.selenium:selenium-firefox-driver:4.1.4")

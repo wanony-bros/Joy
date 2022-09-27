@@ -119,7 +119,10 @@ fun main() {
 
         NewDB.transaction {
             while (selectGuilds.next()) {
-                // TODO make the guild DAO thing
+                Guilds.insertIgnore {
+                    it[Guilds.guildId] = selectGuilds.getString("Guild")
+                    it[Guilds.timerLimit] = selectGuilds.getInt("TimerLimit").toLong()
+                }
             }
         }
     }
