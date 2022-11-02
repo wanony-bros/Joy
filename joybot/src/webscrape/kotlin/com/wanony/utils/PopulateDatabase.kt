@@ -16,10 +16,12 @@ import org.openqa.selenium.WebElement
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.interactions.Actions
+import java.lang.Thread.sleep
 import java.time.LocalDate
 
 fun main() {
     if (!SystemUtils.IS_OS_WINDOWS) {
+        // TODO make this run on Linux, for RaspPi
         println("PopulateDatabase currently only runs on windows, sorry!")
     }
 
@@ -44,13 +46,14 @@ fun main() {
      )
 
     System.setProperty("webdriver.gecko.driver", "libs/geckodriver.exe")
+    // on first run, need to accept cookies as this will cause error
     val driver = FirefoxDriver(FirefoxOptions().apply {
-        addArguments("--headless")
+//        addArguments("--headless")
     })
     try {
         driver.get("https://dbkpop.com/db/all-k-pop-idols/")
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
-
+        sleep(10000)
         fun scroll(driver: FirefoxDriver, element: WebElement) {
             val x = element.rect.x
             val y = element.rect.y
