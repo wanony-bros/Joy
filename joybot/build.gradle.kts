@@ -6,8 +6,12 @@ val exposedVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.6.20"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("java")
     application
 }
+
+
 
 group = "com.wanony"
 version = "1.0-SNAPSHOT"
@@ -78,6 +82,12 @@ tasks.withType<KotlinCompile>().configureEach {
 tasks.register<JavaExec>("createDatabase") {
     group = "joyutils"
     mainClass.set("com.wanony.utils.CreateDatabase")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+tasks.register<JavaExec>("migrateFromOldDB") {
+    group = "joyutils"
+    mainClass.set("com.wanony.utils.MigrateFromOldDatabase")
     classpath = sourceSets["main"].runtimeClasspath
 }
 
