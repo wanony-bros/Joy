@@ -46,6 +46,8 @@ fun main() {
     testGuildId.ifNotBlank { properties.setProperty("testGuild", it) }
     val suggestChannel = askForValue("What is the id of the suggest channel?", acceptBlanks)
     suggestChannel.ifNotBlank { properties.setProperty("suggestChannel", it) }
+    val mainAuditingChannel = askForValue("What is the id of the main auditing channel?", acceptBlanks)
+    mainAuditingChannel.ifNotBlank { properties.setProperty("mainAuditingChannel", it) }
     val redditToken = askForValue("(Optional) What is your Reddit API token?", true)
     redditToken.ifNotBlank { properties.setProperty("redditToken", it) }
     val redditSecret = askForValue("(Optional) What is your Reddit API secret?", true)
@@ -59,7 +61,7 @@ fun main() {
     properties.store(outStream, "Misc properties")
     outStream.close()
 
-    println("Properties are not configured!")
+    println("Properties are now configured!")
 }
 
 private fun basicValidation(acceptBlanks: Boolean) : (String) -> Boolean = { str -> str.isNotBlank() || acceptBlanks }
