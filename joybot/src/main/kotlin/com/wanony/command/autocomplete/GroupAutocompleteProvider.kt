@@ -7,6 +7,7 @@ import com.wanony.command.CommandSelector
 import com.wanony.dao.Groups
 import com.wanony.dao.Members
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import org.jetbrains.exposed.sql.replace
 import org.jetbrains.exposed.sql.select
 
 class GroupAutocompleteProvider : AutocompleteProvider {

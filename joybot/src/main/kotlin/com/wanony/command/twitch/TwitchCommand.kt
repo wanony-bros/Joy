@@ -5,6 +5,7 @@ import com.github.twitch4j.helix.domain.User
 import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
+import com.wanony.dao.InstagramNotifications
 import com.wanony.dao.TwitchNotifications
 import com.wanony.getProperty
 import net.dv8tion.jda.api.EmbedBuilder
@@ -14,6 +15,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.utils.MarkdownSanitizer
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 
 private const val FOLLOW_OPERATION_NAME = "follow"
@@ -76,10 +80,40 @@ class TwitchCommand : JoyCommand {
                 setColor(TWITCH_COLOUR)
             }
             event.replyEmbeds(embed.build()).queue()
+        } else {
+            event.replyEmbeds(Theme.errorEmbed(
+                    "Failed to follow Twitch user $username!\n" +
+                            "Check if this user is already followed in this channel").build()).queue()
         }
     }
 
     private suspend fun unfollowTwitchUser(event: SlashCommandInteractionEvent) {
-
+        val username: String = event.getOption("username")!!.asString
+        val resultList = twitchClient.helix.getUsers(null, null, listOf(username)).execute()
+        val foundUser = resultList.users.firstOrNull { user -> user.login == username }
+        if (foundUser == null) {
+            // we didn't find the username, return error
+            event.replyEmbeds(Theme.errorEmbed("No user with username: $username found!").build()).queue()
+            return
+        }
+        val deleted = DB.transaction {
+            TwitchNotifications.deleteWhere {
+                TwitchNotifications.userId eq foundUser.id and (TwitchNotifications.channelId eq event.channel.id)
+            }
+        }
+        if (deleted == 0) {
+            // if we didn't delete anything
+            event.replyEmbeds(Theme.errorEmbed(
+                "Failed to unfollow Twitch user $username!\n" +
+                        "Please check that this user is followed in this channel!").build()).queue()
+        } else {
+            val embed: EmbedBuilder = EmbedBuilder().apply {
+                setTitle("Successfully unfollowed ${MarkdownSanitizer.escape(foundUser.displayName)}")
+                setDescription("Updates will no longer be received from: \nhttps://www.twitch.tv/${foundUser.login}/")
+                setThumbnail(foundUser.profileImageUrl)
+                setColor(TWITCH_COLOUR)
+            }
+            event.replyEmbeds(embed.build()).queue()
+        }
     }
 }

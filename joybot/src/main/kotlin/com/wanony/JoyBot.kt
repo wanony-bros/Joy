@@ -104,7 +104,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
-        InstagramCommand(jda),
+//        InstagramCommand(jda), What a shocker, instagram is borked
         AuditingCommand(jda),
     ).associateBy { it.commandName }
 

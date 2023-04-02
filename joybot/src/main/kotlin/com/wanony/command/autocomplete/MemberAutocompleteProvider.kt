@@ -24,4 +24,8 @@ class MemberAutocompleteProvider : AutocompleteProvider {
             it[Members.romanStageName]
         }.sorted()
     }
+
+    fun cleanName(name: String) {
+
+    }
 }

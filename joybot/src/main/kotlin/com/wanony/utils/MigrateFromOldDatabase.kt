@@ -126,7 +126,7 @@ fun createGroupMapping(cachedGroups: CachedRowSet): MutableMap<Int, Int> {
 
         while (cachedGroups.next()) {
             var searchName = cachedGroups.getString("Alias")
-            // need to remove rania and nonkpop, and add solo idols
+            // TODO need to remove rania and nonkpop, and add solo idols
             searchName = when (searchName) {
                 "wjsn" -> "Cosmic Girls"
                 "bp" -> "blackpink"
@@ -150,6 +150,7 @@ fun createGroupMapping(cachedGroups: CachedRowSet): MutableMap<Int, Int> {
                     groupIdMap[cachedGroups.getInt("GroupId")] = it[Groups.id].value
                 }
             }
+            // here we check what groups are not found, and we deal with them here
             if (!found) { println("Couldn't find match for $searchName") }
         }
     }
@@ -184,8 +185,10 @@ fun createMemberMapping(cachedMembers: CachedRowSet, groupIdMap: MutableMap<Int,
             var found = false
             members.forEach { member ->
                 // compare our old member name to the new member name
-                val newMember = member[Members.romanStageName].replace("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~ ]".toRegex(), "").lowercase()
-                val oldMember = searchName.replace("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~ ]".toRegex(), "").lowercase()
+                val newMember = member[Members.romanStageName]
+                    .replace("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~ ]".toRegex(), "").lowercase()
+                val oldMember = searchName
+                    .replace("[!\"#$%&'()*+,-./:;<=>?@\\[\\]^_`{|}~ ]".toRegex(), "").lowercase()
                 // now we check if their groups match from groupMapping
                 val newMemberIdGroupId = member[Members.groupId]?.value ?: return@forEach
                 val oldMemberIdGroupId = cachedMembers.getInt("GroupId")
@@ -241,6 +244,7 @@ fun migrateLinksAndTheirTags() {
 }
 
 fun main() {
+    // connect to the old DB and get all the information out of it into memory
     val con = DriverManager.getConnection(
         "jdbc:mysql://localhost:3306/botdatabase", getProperty("databaseUser"), getProperty("databasePassword")
     )
@@ -307,17 +311,27 @@ fun main() {
         "SELECT Guild, TimerLimit FROM guilds;"
     )
 
+    val cachedGuilds = factory.createCachedRowSet()
+    cachedGuilds.populate(selectGuilds)
+
     val selectReddit = con.createStatement().executeQuery(
         "SELECT r.RedditName, rc.ChannelId FROM reddit r JOIN reddit_channels rc WHERE r.RedditId = rc.RedditId;"
     )
+
+    val cachedReddit = factory.createCachedRowSet()
+    cachedReddit.populate(selectReddit)
 
     val selectInstagram = con.createStatement().executeQuery(
         "SELECT i.Instagram, ic.ChannelId FROM instagram i JOIN instagram_channels ic WHERE i.InstagramId = ic.InstagramId;"
     )
 
-    con.close()
+    val cachedInstagram = factory.createCachedRowSet()
+    cachedInstagram.populate(selectInstagram)
 
-//    migrateUsersAndModerators(cachedUsers, cachedMods)
+    con.close()
+    // pass the information into the new db
+
+    migrateUsersAndModerators(cachedUsers, cachedMods)
     val groupMap = createGroupMapping(cachedGroups)
     val memberMap = createMemberMapping(cachedMembers, groupMap)
     migrateLinks(cachedLinks, memberMap)

@@ -51,69 +51,92 @@ fun main() {
 //        addArguments("--headless")
     })
     try {
-        driver.get("https://dbkpop.com/db/all-k-pop-idols/")
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
-        sleep(10000)
+        val slvinId = getProperty<String>("slvinId").toLong()
+        val dateRegex = Regex("(\\d+)-(\\d+)-(\\d+)")
+
         fun scroll(driver: FirefoxDriver, element: WebElement) {
             val x = element.rect.x
             val y = element.rect.y
             driver.executeScript("window.scrollTo($x, $y);")
             driver.executeScript("window.scrollBy(0, -320);")
         }
+        // for now, only support female idols
+        // driver.get("https://dbkpop.com/db/all-k-pop-idols/")
+        // TODO grab more information to fill the groups table from "https://dbkpop.com/db/k-pop-girlgroups/"
+        driver.get("https://dbkpop.com/db/k-pop-girlgroups/")
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
+        sleep(10000)
 
-        val slvinId = getProperty<String>("slvinId").toLong()
-        val dateRegex = Regex("(\\d+)-(\\d+)-(\\d+)")
+        scroll(driver, driver.findElement(By.id("table_1")))
+        val table = driver.findElement(By.id("table_1"))
+        val body = table.findElement(By.tagName("tbody"))
+        val rows = body.findElements(By.tagName("tr"))
+        rows.forEach { row ->
+            val group = row.findElement(By.className("column-group_name")).text
+            val sName = row.findElement(By.className("column-short_name")).text
+            val kName = row.findElement(By.className("column-korean_name")).text
+            val deb = row.findElement(By.className("column-debut")).text
 
-        scroll(driver, driver.findElement(By.id("table_1_next")))
+            val (year, month, day) = dateRegex.find(deb)!!.destructured
+            DB.transaction {
+                Group.new {
+                    this.romanName = group
+                    this.styledName = sName
+                    this.koreanName = kName
+                    this.debut = LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                    this.addedBy = slvinId
+                }
+            }
+            println("Added group: $group")
+        }
 
-        while (true) {
-            val table = driver.findElement(By.id("table_1"))
-            val body = table.findElement(By.tagName("tbody"))
-            val rows = body.findElements(By.tagName("tr"))
-            rows.forEach { row ->
-                val group = row.findElement(By.className("column-grp")).text
-                val romanStageName = row.findElement(By.className("column-stage_name")).text
-                val romanFullName = row.findElement(By.className("column-full_name")).text
-                val koreanFullName = row.findElement(By.className("column-korean_name")).text
-                val koreanStageName = row.findElement(By.className("column-korean_stage_name")).text
-                val dob = row.findElement(By.className("column-dob")).text
-                val country = row.findElement(By.className("column-country")).text
-                val cityOfBirth = row.findElement(By.className("column-city")).text
-                val gender = row.findElement(By.className("column-gender")).text
+        // from here, add idols
+        driver.get("https://dbkpop.com/db/female-k-pop-idols/")
+        sleep(10000)
 
-                val (year, month, day) = dateRegex.find(dob)!!.destructured
-                DB.transaction {
-                    val grp = Group.find {
-                        Groups.romanName eq group
-                    }.firstOrNull() ?: if (group.isNullOrBlank()) null else {
-                        Group.new {
-                            this.romanName = group
-                            this.addedBy = slvinId
-                        }
-                    }
-
-                    Member.new {
-                        this.groupId = grp
-                        this.romanStageName = romanStageName
-                        this.romanFullName = romanFullName
-                        this.hangulStageName = koreanStageName
-                        this.hangulFullName = koreanFullName
-                        this.dateOfBirth = LocalDate.of(year.toInt(), month.toInt(), day.toInt())
-                        this.country = country
-                        this.cityOfBirth = cityOfBirth
-                        this.gender = if (gender == "M") Gender.Male else Gender.Female
+        scroll(driver, driver.findElement(By.id("table_1")))
+        val t = driver.findElement(By.id("table_1"))
+        val b = t.findElement(By.tagName("tbody"))
+        val rs = b.findElements(By.tagName("tr"))
+        rs.forEach { row ->
+            val group = row.findElement(By.className("column-grp")).text
+            val romanStageName = row.findElement(By.className("column-stage_name")).text
+            val romanFullName = row.findElement(By.className("column-full_name")).text
+            val koreanFullName = row.findElement(By.className("column-korean_name")).text
+            val koreanStageName = row.findElement(By.className("column-korean_stage_name")).text
+            val dob = row.findElement(By.className("column-dob")).text
+            val country = row.findElement(By.className("column-country")).text
+            val cityOfBirth = row.findElement(By.className("column-city")).text
+//            val gender = row.findElement(By.className("column-gender")).text
+            val gender = "F"
+            if (dob.isEmpty()) {
+                return@forEach
+            }
+            val (year, month, day) = dateRegex.find(dob)!!.destructured
+            DB.transaction {
+                val grp = Group.find {
+                    Groups.romanName eq group
+                }.firstOrNull() ?: if (group.isNullOrBlank()) null else {
+                    Group.new {
+                        this.romanName = group
                         this.addedBy = slvinId
                     }
                 }
-                println(romanStageName)
+
+                Member.new {
+                    this.groupId = grp
+                    this.romanStageName = romanStageName
+                    this.romanFullName = romanFullName
+                    this.hangulStageName = koreanStageName
+                    this.hangulFullName = koreanFullName
+                    this.dateOfBirth = LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                    this.country = country
+                    this.cityOfBirth = cityOfBirth
+                    this.gender = if (gender == "M") Gender.Male else Gender.Female
+                    this.addedBy = slvinId
+                }
             }
-            val next = driver.findElement(By.id("table_1_next"))
-            scroll(driver, next)
-            if (!next.getAttribute("class").contains("disabled")) {
-                Actions(driver).moveToElement(next).click().perform()
-            } else {
-                break
-            }
+            println(romanStageName)
         }
     } finally {
         driver.quit()
