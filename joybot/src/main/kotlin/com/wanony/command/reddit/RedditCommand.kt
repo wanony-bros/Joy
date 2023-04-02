@@ -86,6 +86,9 @@ class RedditCommand(val jda: JDA) : JoyCommand {
                         it.url()?.let { url ->
                             if (url.startsWith("https://gfycat.com/")) {
                                 channel.sendMessage(url).queue()
+                            } else if (url.startsWith("https://i.imgur.com/")) {
+                                // add check for imgur, now that gfycat has some upload issues
+                                channel.sendMessage(url).queue()
                             }
                         }
                     }
