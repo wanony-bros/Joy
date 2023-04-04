@@ -77,18 +77,33 @@ fun main() {
             val kName = row.findElement(By.className("column-korean_name")).text
             val deb = row.findElement(By.className("column-debut")).text
 
-            val (year, month, day) = dateRegex.find(deb)!!.destructured
+            val year: Int
+            val month: Int
+            val day: Int
+
+            if (deb != "") {
+                val (y, m, d) = dateRegex.find(deb)!!.destructured
+                year = y.toInt()
+                month = m.toInt()
+                day = d.toInt()
+            } else {
+                year = 1987
+                month = 4
+                day = 1
+            }
+
             DB.transaction {
                 Group.new {
                     this.romanName = group
                     this.styledName = sName
                     this.koreanName = kName
-                    this.debut = LocalDate.of(year.toInt(), month.toInt(), day.toInt())
+                    this.debut = LocalDate.of(year, month, day)
                     this.addedBy = slvinId
                 }
             }
             println("Added group: $group")
         }
+
 
         // from here, add idols
         driver.get("https://dbkpop.com/db/female-k-pop-idols/")

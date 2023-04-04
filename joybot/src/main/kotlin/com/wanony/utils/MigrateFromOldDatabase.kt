@@ -81,7 +81,7 @@ fun migrateRedditAndRedditChannels(cachedReddit: CachedRowSet) {
         while (cachedReddit.next()) {
             RedditNotifications.insertIgnore {
                 it[RedditNotifications.channelId] = cachedReddit.getString("ChannelId")
-                it[RedditNotifications.subreddit] = cachedReddit.getString("Instagram")
+                it[RedditNotifications.subreddit] = cachedReddit.getString("RedditName")
             }
         }
     }
@@ -95,7 +95,6 @@ fun migrateTwitterAndTwitterChannels() {
 fun migrateTwitchAndTwitchChannels(cachedTwitch: CachedRowSet) {
     // merged into one table
 
-    SchemaUtils.setSchema(Schema("joy"))
     DB.transaction {
         while (cachedTwitch.next()) {
             TwitchNotifications.insertIgnore {
@@ -227,7 +226,7 @@ fun migrateLinks(cachedLinks: CachedRowSet, memberIdMap: MutableMap<Int, Int>) {
                 insertedLinks++
             }
         }
-    println("Inserted $insertedLinks links.")
+        println("Inserted $insertedLinks links.")
     }
 }
 // when migrating groups and members, we should take care to change for the new names from web scrape
@@ -235,13 +234,44 @@ fun migrateLinks(cachedLinks: CachedRowSet, memberIdMap: MutableMap<Int, Int>) {
 
 
 // migrate the tags with their names
-fun migrateTags() {
+fun migrateTagsAndLinksWithTags(cachedTags: CachedRowSet, cachedTaggedLinks: CachedRowSet) {
+    DB.transaction {
+        // Convert cachedTaggedLinks to a map to avoid nested loops and make it more efficient
+        val linksByTagName = mutableMapOf<String, MutableList<String>>()
+        while (cachedTaggedLinks.next()) {
+            val tagName = cachedTaggedLinks.getString("TagName")
+            val link = cachedTaggedLinks.getString("Link")
+            linksByTagName.getOrPut(tagName) { mutableListOf() }.add(link)
+        }
 
+        var insertedTags = 0
+
+        while (cachedTags.next()) {
+            val currTagName = cachedTags.getString("TagName")
+            val currentTagId = Tags.insertIgnoreAndGetId { tag ->
+                tag[Tags.tagName] = currTagName
+                tag[Tags.addedBy] = cachedTags.getString("AddedBy").toLong()
+            }
+
+            currentTagId?.let { tagId ->
+                insertedTags++
+
+                linksByTagName[currTagName]?.forEach { link ->
+                    val linkRow = Links.select { Links.link eq link }.singleOrNull()
+                    linkRow?.let {
+                        LinkTags.insertIgnore {
+                            it[LinkTags.tagId] = tagId.value
+                            it[LinkTags.linkId] = linkRow[Links.id]
+                        }
+                    }
+                }
+            }
+        }
+        println("Inserted: $insertedTags tags")
+    }
 }
 
-fun migrateLinksAndTheirTags() {
 
-}
 
 fun main() {
     // connect to the old DB and get all the information out of it into memory
@@ -306,6 +336,13 @@ fun main() {
     val cachedChannels = factory.createCachedRowSet()
     cachedChannels.populate(selectChannels)
 
+    val selectTwitch = con.createStatement().executeQuery(
+        "SELECT t.Twitch, tc.ChannelId FROM twitch t JOIN twitch_channels tc ON t.TwitchId = tc.TwitchId;"
+    )
+
+    val cachedTwitch = factory.createCachedRowSet()
+    cachedTwitch.populate(selectTwitch)
+
     // near direct, just GuildId and TimerLimit
     val selectGuilds = con.createStatement().executeQuery(
         "SELECT Guild, TimerLimit FROM guilds;"
@@ -328,13 +365,40 @@ fun main() {
     val cachedInstagram = factory.createCachedRowSet()
     cachedInstagram.populate(selectInstagram)
 
+    val selectTags = con.createStatement().executeQuery(
+        "SELECT t.TagName, t.TagId, t.AddedBy FROM tags t"
+    )
+    val cachedTags = factory.createCachedRowSet()
+    cachedTags.populate(selectTags)
+
+    val selectTaggedLinks = con.createStatement().executeQuery(
+        "SELECT t.TagName, l.Link FROM tags t JOIN links l JOIN " +
+                "link_tags lt ON lt.LinkId = l.LinkId AND lt.TagId = t.TagId"
+    )
+    val cachedTaggedLinks = factory.createCachedRowSet()
+    cachedTaggedLinks.populate(selectTaggedLinks)
+
     con.close()
     // pass the information into the new db
-
+    // migrate users and mods
     migrateUsersAndModerators(cachedUsers, cachedMods)
+    // link ids for groups and maps
     val groupMap = createGroupMapping(cachedGroups)
     val memberMap = createMemberMapping(cachedMembers, groupMap)
+    // migrate links
     migrateLinks(cachedLinks, memberMap)
+    // migrate tags and tagged links
+    migrateTagsAndLinksWithTags(cachedTags, cachedTaggedLinks)
+    // migrate reddit integrations
+    migrateRedditAndRedditChannels(cachedReddit)
+    // migrate Twitch integration
+    migrateTwitchAndTwitchChannels(cachedTwitch)
+    // Migrate auditing channels
+    migrateAuditingChannels(cachedChannels)
+    // Migrate instagram
+    migrateInstagramAndInstagramChannels(cachedInstagram)
+    // migrate guilds
+    migrateGuilds(cachedGuilds)
 
     println("Complete.")
 
