@@ -1,16 +1,21 @@
 package com.wanony.command.gfys
 
+import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
 import com.wanony.command.gfys.links.LinkProvider.getLink
+import com.wanony.dao.Guilds
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageChannel
+import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
+import org.jetbrains.exposed.sql.javatime.time
+import org.jetbrains.exposed.sql.select
 import java.awt.Color
 import java.util.concurrent.TimeUnit
 
@@ -58,63 +63,69 @@ class TimerCommand : JoyCommand {
         val groupStr = event.getOption("group")?.asString
         val idol = event.getOption("idol")?.asString
         val tag = event.getOption("tag")?.asString
-        var duration = event.getOption("duration")?.asInt
+        val duration = event.getOption("duration")?.asInt
         var interval = event.getOption("interval")?.asInt
         val channel = event.channel
 
-//        if (event.guild != null) {
-//            TODO("check if guild max timer is lower than the duration set by user")
-//        }
-        if (duration == null) {
-            duration = 1
-        } else {
-            if (duration > 30) { duration = 30 }
-        }
-        if (interval == null) {
-            interval = 10
-        } else {
-            if (interval > 60) { interval = 60 }
-        }
-        val loops = (duration * 60) / interval
-        var count = 1
-        var timerId = 1
-        for (timer in timers) {
-            if (timer.key.startsWith(event.user.id)) {
-                count ++
-                val id = timer.key.substringAfterLast("_").toInt()
-                if (id > timerId) {
-                    timerId = id + 1
-                }
-                if (count >= 10) {
-                    event.replyEmbeds(EmbedBuilder().apply {
-                        setTitle("Failed to initiate timer!")
-                        setDescription("Too many timers running for user: ${event.user.name}")
-                        setColor(Color.RED)
-                        setFooter("Error for user ${event.user.name}", event.user.effectiveAvatarUrl)
-                    }.build()).queue()
-                    return
+        var updatedDuration = duration?.coerceAtMost(30) ?: 1
+
+        event.guild?.let { guild ->
+            DB.transaction {
+                Guilds.select { Guilds.guildId eq guild.id }.firstOrNull()?.let { row ->
+                    val timerLimit = row[Guilds.timerLimit].toInt()
+                    updatedDuration = updatedDuration.coerceAtMost(timerLimit)
                 }
             }
         }
-        val timerKey: String = event.user.id + "_" + timerId
-        event.replyEmbeds(EmbedBuilder().apply {
-            setTitle("Timer Started!")
-            setDescription("$groupStr's $idol for $duration minute(s)!\nTimer ID:")
-            setColor(Theme.BLURPLE)
-            setFooter("Timer for user ${event.user.name}", event.user.effectiveAvatarUrl)
-        }.build()).queue()
+
+        interval = interval?.coerceAtMost(60) ?: 10
+        val loops = (updatedDuration * 60) / interval
+        val userTimers = timers.keys.filter { it.startsWith(event.user.id) }
+
+        if (userTimers.size >= 10) {
+            event.replyEmbeds(buildErrorEmbed(event.user, "Too many timers running for user: ${event.user.name}")).queue()
+            return
+        }
+
+        val timerId = userTimers.size + 1
+        val readableTimerId = "${event.user.name}-${timerId}"
+        val timerKey = "${event.user.id}_$timerId"
+
+        event.replyEmbeds(buildSuccessEmbed(event.user, "$groupStr's $idol for $updatedDuration minute(s)!\nTimer ID: $readableTimerId")).queue()
         timerHelper(loops, channel, groupStr, idol, tag, interval, timerKey)
     }
 
+    private fun buildErrorEmbed(user: User, description: String) = EmbedBuilder().apply {
+        setTitle("Failed to initiate timer!")
+        setDescription(description)
+        setColor(Color.RED)
+        setFooter("Error for user ${user.name}", user.effectiveAvatarUrl)
+    }.build()
+
+    private fun buildSuccessEmbed(user: User, description: String) = EmbedBuilder().apply {
+        setTitle("Timer Started!")
+        setDescription(description)
+        setColor(Theme.BLURPLE)
+        setFooter("Timer for user ${user.name}", user.effectiveAvatarUrl)
+    }.build()
+
+
     private fun stop(event: SlashCommandInteractionEvent) {
-        val timerId = event.getOption("id")
-        val userId = event.user.id
-        val target = userId + "_" + timerId
-        val removed = timers.remove(target)
-        if (removed != null) {
-            event.replyEmbeds(Theme.successEmbed("Stopped timer of ID: `$timerId`").build()).queue()
+        val readableTimerId = event.getOption("id")?.asString
+
+        if (readableTimerId == null) {
+            event.replyEmbeds(buildErrorEmbed(event.user, "Invalid timer ID. Please provide a valid timer ID.")).queue()
+        } else {
+            val userId = event.user.id
+            val target = timers.keys.find { it.startsWith(userId) && it.endsWith("_${readableTimerId.split("-").last()}") }
+            if (target != null) {
+                timers.remove(target)
+                event.replyEmbeds(buildSuccessEmbed(event.user, "Stopped timer of ID: `$readableTimerId`")).queue()
+            } else {
+                event.replyEmbeds(buildErrorEmbed(event.user, "Failed to stop timer of ID: `$readableTimerId`.\nPlease check this is running.")).queue()
+            }
         }
-        event.replyEmbeds(Theme.errorEmbed("Failed to stop timer of ID: `$timerId`.\nPlease check this is running.").build()).queue()
     }
+
 
 }
