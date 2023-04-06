@@ -2,6 +2,7 @@ package com.wanony.command.reddit
 
 import com.wanony.DB
 import com.wanony.Theme
+import com.wanony.Theme.Companion.toLink
 import com.wanony.checkGuildReplyPermissions
 import com.wanony.command.JoyCommand
 import com.wanony.dao.RedditNotifications
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit
 
 private const val FOLLOW_OPERATION_NAME = "follow"
 private const val UNFOLLOW_OPERATION_NAME = "unfollow"
+private const val CLEAR_OPERATION_NAME = "clear"
 
 class RedditCommand(val jda: JDA) : JoyCommand {
     private lateinit var redditClient: RedditClient
@@ -37,7 +39,8 @@ class RedditCommand(val jda: JDA) : JoyCommand {
             SubcommandData(FOLLOW_OPERATION_NAME, "Follow a subreddit")
                 .addOption(OptionType.STRING, "subreddit", "The subreddit to follow", true),
             SubcommandData(UNFOLLOW_OPERATION_NAME, "Unfollow a subreddit")
-                .addOption(OptionType.STRING, "subreddit", "The subreddit to unfollow", true)
+                .addOption(OptionType.STRING, "subreddit", "The subreddit to unfollow", true),
+            SubcommandData(CLEAR_OPERATION_NAME, "Remove all followed subreddits from this channel")
         )
 
     override fun setup() : Boolean {
@@ -101,8 +104,27 @@ class RedditCommand(val jda: JDA) : JoyCommand {
         when(event.subcommandName) {
             FOLLOW_OPERATION_NAME -> followSubreddit(event)
             UNFOLLOW_OPERATION_NAME -> unfollowSubreddit(event)
+            CLEAR_OPERATION_NAME -> clearAll(event)
             else -> throw java.lang.RuntimeException("WTF DISCORD????")
         }
+    }
+
+    private fun clearAll(event: SlashCommandInteractionEvent) {
+        val channel = event.channel as? GuildMessageChannel ?: return replyGuildRequiredError(event)
+
+        val removed = DB.transaction {
+            RedditNotifications.deleteWhere {
+                RedditNotifications.channelId eq channel.id
+            }
+        }
+
+        val message = if (removed == 0) {
+            "There were no subreddits followed in ${channel.toLink()}."
+        } else {
+            "Stopped following $removed subreddits."
+        }
+
+        event.replyEmbeds(Theme.successEmbed(message).build()).queue()
     }
 
     private fun followSubreddit(event: SlashCommandInteractionEvent) {

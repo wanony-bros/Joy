@@ -1,6 +1,7 @@
 package com.wanony
 
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.entities.Channel
 import java.awt.Color
 
 class Theme {
@@ -19,5 +20,7 @@ class Theme {
         }
 
         fun genericErrorEmbed() = errorEmbed("Something went wrong!").build()
+
+        fun Channel.toLink(): String = "<#${id}>"
     }
 }
