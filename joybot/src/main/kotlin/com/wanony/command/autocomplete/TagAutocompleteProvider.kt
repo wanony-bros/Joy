@@ -6,6 +6,7 @@ import com.wanony.command.AutocompleteProvider
 import com.wanony.command.CommandSelector
 import com.wanony.dao.*
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
@@ -17,7 +18,12 @@ class TagAutocompleteProvider : AutocompleteProvider {
     override fun provideOptions(event: CommandAutoCompleteInteractionEvent): List<String> = DB.transaction {
         val group = event.getOption("group")?.asString
         val member = event.getOption("idol")?.asString
-        val query = if (group != null && member != null) {
+        val query = buildTagQuery(group, member)
+        query.limit(25).map { it[Tags.tagName] }.sorted()
+    }
+
+    private fun buildTagQuery(group: String?, member: String?): Query {
+        return if (group != null && member != null) {
             Tags.innerJoin(LinkTags).innerJoin(Links).innerJoin(LinkMembers).innerJoin(Members).innerJoin(Groups)
                 .select { Groups.romanName eq group and (Members.romanStageName eq member) }.groupBy(Tags.tagName)
         } else if (group != null) {
@@ -26,8 +32,5 @@ class TagAutocompleteProvider : AutocompleteProvider {
         } else {
             Tags.slice(Tags.tagName).selectAll().groupBy(Tags.tagName)
         }
-        query.limit(25).map {
-            it[Tags.tagName]
-        }.sorted()
     }
 }

@@ -160,12 +160,13 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
         }
         else if (pL.startsWith("https://www.gifdeliverynetwork.com/") ||
                  pL.startsWith("https://www.youtu") ||
+                 pL.startsWith("https://i.imgur.com/") ||
                  supportedExtensions.any { pL.endsWith(it) }) {
             pL
         } else if (pL.contains("twimg")) {
-          "https://pbs.twimg.com/media/" + pL.substringAfterLast("/").substringBeforeLast("?").let {
-              it + if (it.endsWith("png")) "?format=png&name=orig" else "?format=jpg&name=orig"
-          }
+            "https://pbs.twimg.com/media/" + pL.substringAfterLast("/").substringBeforeLast("?").let {
+                it + if (it.endsWith("png")) "?format=png&name=orig" else "?format=jpg&name=orig"
+            }
         }
         else {
             null

@@ -41,6 +41,7 @@ fun main() {
         RedditNotifications,
         InstagramNotifications,
         AuditingChannels,
+        Guilds,
     )
 
     transaction {
