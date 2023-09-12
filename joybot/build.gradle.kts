@@ -37,8 +37,8 @@ val webscrapeImplementation = configurations.getting {
 dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.0-alpha7")
     implementation("mysql:mysql-connector-java:8.0.28")
-    implementation("net.dv8tion:JDA:5.0.0-alpha.11")
-    implementation("com.github.minndevelopment:jda-ktx:78e74bc45b8d73a5d7974ef0d5f8efdd5d97910f")
+    implementation("net.dv8tion:JDA:5.0.0-beta.13")
+    implementation("com.github.minndevelopment:jda-ktx:9370cb13cc64646862e6f885959d67eb4b157e4a")
     implementation("com.zaxxer:HikariCP:4.0.3")
     implementation("com.google.oauth-client:google-oauth-client:1.33.3")
     implementation("com.google.oauth-client:google-oauth-client-jetty:1.33.3")

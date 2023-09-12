@@ -1,7 +1,7 @@
 package com.wanony
 
 import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.entities.Channel
+import net.dv8tion.jda.api.entities.channel.Channel
 import java.awt.Color
 
 class Theme {
