@@ -20,12 +20,8 @@ import java.lang.Thread.sleep
 import java.time.LocalDate
 
 fun main() {
-    if (!SystemUtils.IS_OS_WINDOWS) {
-        // TODO make this run on Linux, for RaspPi
-        println("PopulateDatabase currently only runs on windows, sorry!")
-    }
 
-     val url = getProperty<String>("databaseUrl")
+    val url = getProperty<String>("databaseUrl")
      val databaseDriver = getProperty<String>("databaseDriver")
      val user = getProperty<String>("databaseUser")
      val password = getProperty<String>("databasePassword")
@@ -45,7 +41,14 @@ fun main() {
          password = password
      )
 
-    System.setProperty("webdriver.gecko.driver", "libs/geckodriver.exe")
+    if (SystemUtils.IS_OS_WINDOWS) {
+        System.setProperty("webdriver.gecko.driver", "libs/geckodriver.exe")
+    } else if (SystemUtils.IS_OS_MAC) {
+        System.setProperty("webdriver.gecko.driver", "libs/geckodriver") // assuming you have a mac version in the libs folder
+    } else if (SystemUtils.IS_OS_LINUX) {
+        System.setProperty("webdriver.gecko.driver", "libs/geckodriver") // assuming you have a linux version in the libs folder
+    }
+
     // on first run, need to accept cookies as this will cause error
     val driver = FirefoxDriver(FirefoxOptions().apply {
 //        addArguments("--headless")
