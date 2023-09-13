@@ -1,9 +1,8 @@
-package com.wanony.command.gfys.links
+package com.wanony.command.gifs.links
 
 import com.wanony.DB
 import com.wanony.dao.*
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 data class AnnotatedLink(val link: String, val group: String, val member: String)
 

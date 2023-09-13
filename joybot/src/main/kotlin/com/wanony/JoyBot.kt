@@ -6,11 +6,10 @@ import com.wanony.command.auditing.AuditingCommand
 import com.wanony.command.autocomplete.GroupAutocompleteProvider
 import com.wanony.command.autocomplete.MemberAutocompleteProvider
 import com.wanony.command.autocomplete.TagAutocompleteProvider
-import com.wanony.command.gfys.AddLinkCommand
-import com.wanony.command.gfys.GfyCommand
-import com.wanony.command.gfys.RandomLinkCommand
-import com.wanony.command.gfys.TimerCommand
-import com.wanony.command.instagram.InstagramCommand
+import com.wanony.command.gifs.AddLinkCommand
+import com.wanony.command.gifs.GifCommand
+import com.wanony.command.gifs.RandomLinkCommand
+import com.wanony.command.gifs.TimerCommand
 import com.wanony.command.manage.ManageCommand
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
@@ -99,7 +98,7 @@ fun main() {
         AddLinkCommand(jda),
         RandomLinkCommand(),
         ManageCommand(),
-        GfyCommand(),
+        GifCommand(),
         InformationCommand(),
         TimerCommand(),
         MemeCommand(),

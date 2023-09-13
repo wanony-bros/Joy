@@ -1,17 +1,17 @@
-package com.wanony.command.gfys
+package com.wanony.command.gifs
 
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.command.gfys.links.LinkProvider.getLink
+import com.wanony.command.gifs.links.LinkProvider.getLink
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 
-class GfyCommand : JoyCommand {
-    override val commandName: String = "gfy"
+class GifCommand : JoyCommand {
+    override val commandName: String = "gif"
     override val commandData: CommandData = Commands.slash(
-        commandName, "Get a gfy from Joy's database!")
+        commandName, "Get a gif from Joy's database!")
         .addOption(OptionType.STRING, "group", "Enter the group", false, true)
         .addOption(OptionType.STRING, "idol", "Enter the idol", false, true)
             // potentially extend to get more than one tag

@@ -1,8 +1,8 @@
-package com.wanony.command.gfys
+package com.wanony.command.gifs
 
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.command.gfys.links.LinkProvider
+import com.wanony.command.gifs.links.LinkProvider
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands

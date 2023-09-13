@@ -1,9 +1,9 @@
-package com.wanony.command.gfys
+package com.wanony.command.gifs
 
 import com.wanony.DB
 import com.wanony.Theme
 import com.wanony.command.JoyCommand
-import com.wanony.command.gfys.links.LinkProvider.getLink
+import com.wanony.command.gifs.links.LinkProvider.getLink
 import com.wanony.dao.Guilds
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.EmbedBuilder
@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import org.jetbrains.exposed.sql.javatime.time
 import org.jetbrains.exposed.sql.select
 import java.awt.Color
 import java.util.concurrent.TimeUnit
