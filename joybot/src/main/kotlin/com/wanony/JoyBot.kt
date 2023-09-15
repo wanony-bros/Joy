@@ -89,7 +89,7 @@ fun main() {
     )
 
     val jda = light(token, enableCoroutines = true) {
-        intents += listOf(GatewayIntent.GUILD_MEMBERS)
+//        intents += listOf(GatewayIntent.GUILD_MEMBERS)
     }
 
     val allCommands : Map<String, JoyCommand> = listOf(
