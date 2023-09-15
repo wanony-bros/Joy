@@ -51,7 +51,7 @@ fun main() {
 
     // on first run, need to accept cookies as this will cause error
     val driver = FirefoxDriver(FirefoxOptions().apply {
-//        addArguments("--headless")
+        addArguments("--headless")
     })
     try {
         val slvinId = getProperty<String>("slvinId").toLong()
