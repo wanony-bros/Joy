@@ -152,13 +152,11 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
 
     private fun processLink(possibleLink: String): String? {
         val pL = possibleLink.trimEnd('/')
-        return if (pL.startsWith("https://gfycat.com/")) {
-            pL.replaceAfter("-", "").trimEnd('-')
-        }
-        else if (pL.startsWith("https://www.redgifs.com/") || pL.startsWith("https://redgifs.com/")) {
+        return if (pL.startsWith("https://www.redgifs.com/") || pL.startsWith("https://redgifs.com/")) {
             "https://www.redgifs.com/watch/" + pL.substringAfterLast("/")
         }
-        else if (pL.startsWith("https://www.gifdeliverynetwork.com/") ||
+        else if (pL.startsWith("https://imgur.com/") ||
+                 pL.startsWith("https://www.gifdeliverynetwork.com/") ||
                  pL.startsWith("https://www.youtu") ||
                  pL.startsWith("https://i.imgur.com/") ||
                  supportedExtensions.any { pL.endsWith(it) }) {
