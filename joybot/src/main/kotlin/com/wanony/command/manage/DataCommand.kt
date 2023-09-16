@@ -98,7 +98,7 @@ class DataCommand : JoyCommand {
                 .addActionRow(
                     Button.primary(KEEP_BUTTON_ID, "Keep my data"),
                     Button.danger(DELETE_BUTTON_ID, "Delete My data"),
-                ).queue()
+                ).setEphemeral(true).queue()
         } else {
             val e = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
                 this.title = "User ID: `$userId`"
