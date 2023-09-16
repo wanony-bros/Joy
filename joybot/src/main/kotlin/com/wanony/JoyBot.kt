@@ -1,6 +1,7 @@
 package com.wanony
 
 import com.wanony.command.AutocompleteProvider
+import com.wanony.command.CustomButton
 import com.wanony.command.JoyCommand
 import com.wanony.command.auditing.AuditingCommand
 import com.wanony.command.autocomplete.GroupAutocompleteProvider
@@ -10,6 +11,9 @@ import com.wanony.command.gifs.AddLinkCommand
 import com.wanony.command.gifs.GifCommand
 import com.wanony.command.gifs.RandomLinkCommand
 import com.wanony.command.gifs.TimerCommand
+import com.wanony.command.manage.DataCommand
+import com.wanony.command.manage.DeleteButton
+import com.wanony.command.manage.KeepDataButton
 import com.wanony.command.manage.ManageCommand
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
@@ -17,14 +21,13 @@ import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
 import com.wanony.command.reddit.RedditCommand
 import dev.minn.jda.ktx.events.listener
-import dev.minn.jda.ktx.jdabuilder.intents
 import dev.minn.jda.ktx.jdabuilder.light
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.internal.utils.PermissionUtil
 import java.util.*
 
@@ -32,7 +35,9 @@ class JoyBot(
     val jda: JDA,
     commands: Map<String, JoyCommand>,
     private val autoCompleteProviders: List<AutocompleteProvider>,
+    private val buttons: Map<String, CustomButton>
 ) {
+
     val commands: Map<String, JoyCommand>
 
     init {
@@ -60,6 +65,13 @@ class JoyBot(
         }
     }
 
+    suspend fun onButtonInteraction(event: ButtonInteractionEvent) {
+        buttons[event.button.id]?.let {
+            it.execute(event)
+            return
+        }
+    }
+
     private fun updateCommands() {
         listOfNotNull(
             jda.updateCommands(),
@@ -79,6 +91,8 @@ fun SlashCommandInteractionEvent.checkGuildReplyPermissions() : Boolean {
     return !PermissionUtil.checkPermission(replyChannel.permissionContainer, joy, Permission.MESSAGE_SEND)
 }
 
+
+
 fun main() {
     val token = getProperty<String>("discordAPIToken")
 
@@ -87,6 +101,11 @@ fun main() {
         MemberAutocompleteProvider(),
         TagAutocompleteProvider(),
     )
+
+    val allButtons : Map<String, CustomButton> = listOf(
+        DeleteButton(),
+        KeepDataButton(),
+    ).associateBy { it.buttonId }
 
     val jda = light(token, enableCoroutines = true) {
 //        intents += listOf(GatewayIntent.GUILD_MEMBERS)
@@ -105,15 +124,19 @@ fun main() {
         RedditCommand(jda),
 //        InstagramCommand(jda), What a shocker, instagram is borked
         AuditingCommand(jda),
+        DataCommand(),
     ).associateBy { it.commandName }
 
-    val joy = JoyBot(jda, allCommands, allAutocompleteProviders)
+    val joy = JoyBot(jda, allCommands, allAutocompleteProviders, allButtons)
     println("setup is finished boss")
     jda.listener<SlashCommandInteractionEvent> { event ->
         joy.onSlashCommandInteraction(event)
     }
     jda.listener<CommandAutoCompleteInteractionEvent> { event ->
         joy.onCommandAutoCompleteInteraction(event)
+    }
+    jda.listener<ButtonInteractionEvent> { event ->
+        joy.onButtonInteraction(event)
     }
     println("listeners are listening boss")
 
