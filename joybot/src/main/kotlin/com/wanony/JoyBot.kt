@@ -11,10 +11,7 @@ import com.wanony.command.gifs.AddLinkCommand
 import com.wanony.command.gifs.GifCommand
 import com.wanony.command.gifs.RandomLinkCommand
 import com.wanony.command.gifs.TimerCommand
-import com.wanony.command.manage.DataCommand
-import com.wanony.command.manage.DeleteButton
-import com.wanony.command.manage.KeepDataButton
-import com.wanony.command.manage.ManageCommand
+import com.wanony.command.manage.*
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.InformationCommand
@@ -125,6 +122,7 @@ fun main() {
 //        InstagramCommand(jda), What a shocker, instagram is borked
         AuditingCommand(jda),
         DataCommand(),
+        ManageGuildCommand(),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders, allButtons)

@@ -19,7 +19,7 @@ class AvatarCommand : JoyCommand {
         val embed = EmbedBuilder().apply {
             setColor(member?.color)
             setAuthor(member?.effectiveName ?: user.name)
-            setFooter("requested by ${event.user.asTag}", event.user.effectiveAvatarUrl)
+            setFooter("requested by ${event.user.name}", event.user.effectiveAvatarUrl)
             val url = member?.effectiveAvatarUrl ?: user.effectiveAvatarUrl
             setImage(url.substringBeforeLast("?") + "?size=512")
         }.build()

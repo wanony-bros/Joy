@@ -22,7 +22,7 @@ private const val DELETE_DATA_NAME = "delete"
 private const val DELETE_BUTTON_ID = "deleteData"
 private const val KEEP_BUTTON_ID = "keepData"
 
-class DeleteButton() : CustomButton {
+class DeleteButton : CustomButton {
     override val buttonId: String = DELETE_BUTTON_ID
 
     override suspend fun execute(event: ButtonInteractionEvent) = DB.transaction {
@@ -49,7 +49,7 @@ class DeleteButton() : CustomButton {
     }
 }
 
-class KeepDataButton() : CustomButton {
+class KeepDataButton : CustomButton {
     override val buttonId: String = KEEP_BUTTON_ID
 
     override suspend fun execute(event: ButtonInteractionEvent) {
