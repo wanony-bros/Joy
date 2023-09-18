@@ -18,6 +18,7 @@ import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
 import com.wanony.command.reddit.RedditCommand
 import dev.minn.jda.ktx.events.listener
+import dev.minn.jda.ktx.interactions.commands.updateCommands
 import dev.minn.jda.ktx.jdabuilder.light
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
@@ -25,6 +26,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.internal.utils.PermissionUtil
 import java.util.*
 
@@ -75,11 +77,20 @@ class JoyBot(
             jda.getGuildById(getProperty<String>("testGuild"))?.updateCommands()
         ).forEach { commandUpdateAction ->
             commands.values.forEach {
-                commandUpdateAction.addCommands(it.commandData)
+                commandUpdateAction.addCommands(
+                    when(it.commandName) {
+                        // TODO need to update this to work with Joys DB rather than discord perms
+                        "admin" -> it.commandData.setDefaultPermissions(DefaultMemberPermissions.DISABLED)
+                        "manage" -> it.commandData.setDefaultPermissions(DefaultMemberPermissions.DISABLED)
+                        "guild" -> it.commandData.setGuildOnly(true)
+                        else -> it.commandData
+                    }
+                )
             }
             commandUpdateAction.queue()
         }
     }
+
 }
 
 fun SlashCommandInteractionEvent.checkGuildReplyPermissions() : Boolean {
@@ -123,6 +134,7 @@ fun main() {
         AuditingCommand(jda),
         DataCommand(),
         ManageGuildCommand(),
+        AdminCommand(jda),
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders, allButtons)

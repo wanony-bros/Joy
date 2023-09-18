@@ -10,7 +10,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.select
 
 private const val TAG_GROUP_NAME = "tag"
 private const val IDOL_GROUP_NAME = "idol"
@@ -64,6 +66,12 @@ class ManageCommand : JoyCommand {
     override suspend fun execute(event: SlashCommandInteractionEvent) {
         val subcommandGroup = event.subcommandGroup
         val subcommandName = event.subcommandName
+        // check if the user has joy admin privileges
+        val isAdmin = DB.transaction { User.findById(event.user.idLong)?.admin }
+        if (isAdmin == null || isAdmin == false) {
+            event.reply("You do not have the moderator privileges required to do this!").setEphemeral(true).queue()
+            return
+        }
         when(subcommandGroup) {
             TAG_GROUP_NAME -> when(subcommandName) {
                 ADD_OPERATION_NAME -> addTag(event)

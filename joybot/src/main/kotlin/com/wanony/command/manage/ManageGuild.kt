@@ -39,7 +39,6 @@ class ManageGuildCommand : JoyCommand {
 
     }
 
-
     private fun updateTimerLimit(event: SlashCommandInteractionEvent) = DB.transaction {
         if (event.guild == null) {
             event.reply("This command can only be used in servers!").setEphemeral(true).queue()
@@ -55,7 +54,13 @@ class ManageGuildCommand : JoyCommand {
             it[Guilds.guildId] = event.guild!!.id
             it[Guilds.timerLimit] = 5
         }
-        val newLimit = event.getOption("limit")!!.asLong
+        var newLimit = event.getOption("limit")!!.asLong
+        if (newLimit < 0) {
+            event.reply("Timer limit must be a positive number!")
+        } else if (newLimit > 30) {
+            newLimit = 30
+        }
+
         val currentTimerLimit = Guilds.select { Guilds.guildId eq event.guild!!.id }
             .firstOrNull()?.getOrNull(Guilds.timerLimit)
         val updated = Guilds.update({ Guilds.guildId eq event.guild!!.id }) {
@@ -66,7 +71,7 @@ class ManageGuildCommand : JoyCommand {
         } else {
             val emb = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
                 this.title = "Success"
-                this.description = "Timer Limit for ${event.guild!!.name} updated from $currentTimerLimit to $newLimit"
+                this.description = "Timer Limit for ${event.guild!!.name} updated from `$currentTimerLimit` minutes to `$newLimit` minutes"
                 this.image = event.guild!!.iconUrl
                 this.footer {
                     this.name = "Updated by ${event.user.name}"
