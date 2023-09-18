@@ -16,7 +16,7 @@ class MemeCommand : JoyCommand {
     override val commandData: CommandData = Commands.slash(
         commandName, "Meme it out"
     )
-        .addOption(OptionType.STRING, "meme", "The meme to get/add to Joy", true)
+        .addOption(OptionType.STRING, "meme", "The meme to get/add to Joy", true, true)
         .addOption(OptionType.STRING, "content", "Content to be added to this meme", false)
 
     override suspend fun execute(event: SlashCommandInteractionEvent) {
@@ -28,6 +28,7 @@ class MemeCommand : JoyCommand {
 
         if (memeContent != null) {
             // we got a meme, we send a meme
+            // this part also stops the meme from being overwritten
             event.reply(memeContent).queue()
             return
         }

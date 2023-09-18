@@ -6,6 +6,7 @@ import com.wanony.command.JoyCommand
 import com.wanony.command.auditing.AuditingCommand
 import com.wanony.command.autocomplete.GroupAutocompleteProvider
 import com.wanony.command.autocomplete.MemberAutocompleteProvider
+import com.wanony.command.autocomplete.MemeAutocompleteProvider
 import com.wanony.command.autocomplete.TagAutocompleteProvider
 import com.wanony.command.gifs.AddLinkCommand
 import com.wanony.command.gifs.GifCommand
@@ -108,6 +109,7 @@ fun main() {
         GroupAutocompleteProvider(),
         MemberAutocompleteProvider(),
         TagAutocompleteProvider(),
+        MemeAutocompleteProvider(),
     )
 
     val allButtons : Map<String, CustomButton> = listOf(
