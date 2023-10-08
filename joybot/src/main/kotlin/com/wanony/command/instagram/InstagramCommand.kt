@@ -64,6 +64,7 @@ class InstagramCommand(val jda: JDA) : JoyCommand {
 
         return true
     }
+
     private var challengeHandler =
         LoginHandler { client: IGClient, response: LoginResponse ->
             IGChallengeUtils.resolveChallenge(client, response) {

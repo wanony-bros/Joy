@@ -12,23 +12,33 @@ import com.wanony.command.gifs.AddLinkCommand
 import com.wanony.command.gifs.GifCommand
 import com.wanony.command.gifs.RandomLinkCommand
 import com.wanony.command.gifs.TimerCommand
+import com.wanony.command.instagram.InstagramCommand
 import com.wanony.command.manage.*
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
 import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
 import com.wanony.command.reddit.RedditCommand
+import com.wanony.dao.User
+import com.wanony.dao.Users
 import dev.minn.jda.ktx.events.listener
 import dev.minn.jda.ktx.interactions.commands.updateCommands
 import dev.minn.jda.ktx.jdabuilder.light
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleAddEvent
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.internal.utils.PermissionUtil
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.insertIgnoreAndGetId
+import org.jetbrains.exposed.sql.update
 import java.util.*
 
 class JoyBot(
@@ -71,6 +81,31 @@ class JoyBot(
             return
         }
     }
+
+    suspend fun onRoleAdded(event: GuildMemberRoleAddEvent) = DB.transaction {
+        // Check if the added role is the one you are interested in.
+//        val roleId = "1159465237561475142" // Replace with the actual role ID you want to track.
+        val roleId = "1153262194562183178"
+        if (event.roles.any { it.id == roleId }) {
+            val userId = event.user.idLong
+            val user = Users.insertIgnoreAndGetId { it[Users.id] = userId }
+            User.findById(user!!)!!.isPremium = true
+            return@transaction
+        }
+    }
+
+    suspend fun onRoleRemoved(event: GuildMemberRoleRemoveEvent) = DB.transaction {
+        // Check if the added role is the one you are interested in.
+//        val roleId = "1159465237561475142" // Replace with the actual role ID you want to track.
+        val roleId = "1153262194562183178"
+        if (event.roles.any { it.id == roleId }) {
+            val userId = event.user.idLong
+            val user = Users.insertIgnoreAndGetId { it[Users.id] = userId }
+            User.findById(user!!)!!.isPremium = false
+            return@transaction
+        }
+    }
+
 
     private fun updateCommands() {
         listOfNotNull(
@@ -132,7 +167,7 @@ fun main() {
         TimerCommand(),
         MemeCommand(),
         RedditCommand(jda),
-//        InstagramCommand(jda), What a shocker, instagram is borked
+//        InstagramCommand(jda), // Error on logging in
         AuditingCommand(jda),
         DataCommand(),
         ManageGuildCommand(),
@@ -150,6 +185,12 @@ fun main() {
     jda.listener<ButtonInteractionEvent> { event ->
         joy.onButtonInteraction(event)
     }
+//    jda.listener<GuildMemberRoleAddEvent> { event ->
+//        joy.onRoleAdded(event)
+//    }
+//    jda.listener<GuildMemberRoleRemoveEvent> { event ->
+//        joy.onRoleRemoved(event)
+//    }
     println("listeners are listening boss")
 
 }

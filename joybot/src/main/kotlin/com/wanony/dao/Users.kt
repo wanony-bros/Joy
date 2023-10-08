@@ -10,6 +10,7 @@ object Users : IdTable<Long>() {
     val xp = integer("xp").default(0)
     val contribution = integer("contribution").default(0)
     val admin = bool("admin").default(false)
+    val isPremium = bool("isPremium").default(false)
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -18,4 +19,5 @@ class User(id: EntityID<Long>): LongEntity(id) {
     var xp by Users.xp
     var contribution by Users.contribution
     var admin by Users.admin
+    var isPremium by Users.isPremium
 }
