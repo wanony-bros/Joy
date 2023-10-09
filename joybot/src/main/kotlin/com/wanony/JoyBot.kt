@@ -16,6 +16,7 @@ import com.wanony.command.instagram.InstagramCommand
 import com.wanony.command.manage.*
 import com.wanony.command.memes.MemeCommand
 import com.wanony.command.misc.AvatarCommand
+import com.wanony.command.misc.ClaimPremiumCommand
 import com.wanony.command.misc.InformationCommand
 import com.wanony.command.misc.SuggestCommand
 import com.wanony.command.reddit.RedditCommand
@@ -97,8 +98,8 @@ class JoyBot(
     suspend fun onRoleRemoved(event: GuildMemberRoleRemoveEvent) = DB.transaction {
         // Check if the added role is the one you are interested in.
 //        val roleId = "1159465237561475142" // Replace with the actual role ID you want to track.
-        val roleId = "1153262194562183178"
-        if (event.roles.any { it.id == roleId }) {
+        val roleId = 1153262194562183178
+        if (event.roles.any { it.idLong == roleId }) {
             val userId = event.user.idLong
             val user = Users.insertIgnoreAndGetId { it[Users.id] = userId }
             User.findById(user!!)!!.isPremium = false
@@ -119,6 +120,7 @@ class JoyBot(
                         "admin" -> it.commandData.setDefaultPermissions(DefaultMemberPermissions.DISABLED)
                         "manage" -> it.commandData.setDefaultPermissions(DefaultMemberPermissions.DISABLED)
                         "guild" -> it.commandData.setGuildOnly(true)
+                        "claim" -> it.commandData.setGuildOnly(true)
                         else -> it.commandData
                     }
                 )
@@ -172,6 +174,7 @@ fun main() {
         DataCommand(),
         ManageGuildCommand(),
         AdminCommand(jda),
+        ClaimPremiumCommand()
     ).associateBy { it.commandName }
 
     val joy = JoyBot(jda, allCommands, allAutocompleteProviders, allButtons)
