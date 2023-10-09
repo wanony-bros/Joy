@@ -1,6 +1,6 @@
 package com.wanony.reddit.samples;
 
-import com.wanony.JoyBotKt;
+import com.wanony.joy.discord.JoyBotKt;
 import com.wanony.reddit.api.json.Link;
 import com.wanony.reddit.api.json.Listing;
 import com.wanony.reddit.impl.DefaultRedditClient;

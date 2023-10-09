@@ -2,12 +2,12 @@
 
 package com.wanony.utils
 
-import com.wanony.DB
-import com.wanony.dao.Gender
-import com.wanony.dao.Group
-import com.wanony.dao.Groups
-import com.wanony.dao.Member
-import com.wanony.getProperty
+import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.dao.Gender
+import com.wanony.joy.data.dao.Group
+import com.wanony.joy.data.dao.Groups
+import com.wanony.joy.data.dao.Member
+import com.wanony.joy.discord.getProperty
 import java.time.Duration
 import org.apache.commons.lang3.SystemUtils
 import org.jetbrains.exposed.sql.Database
@@ -15,7 +15,6 @@ import org.openqa.selenium.By
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.firefox.FirefoxDriver
 import org.openqa.selenium.firefox.FirefoxOptions
-import org.openqa.selenium.interactions.Actions
 import java.lang.Thread.sleep
 import java.time.LocalDate
 
