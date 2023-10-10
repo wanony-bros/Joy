@@ -1,6 +1,6 @@
 @file:JvmName("MigrateFromOldDatabase")
 
-package com.wanony.joy.data.utils
+package com.wanony.joy.data.util
 
 import com.wanony.joy.data.dao.DB
 import com.wanony.joy.data.dao.*

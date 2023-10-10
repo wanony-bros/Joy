@@ -1,6 +1,6 @@
 @file:JvmName("PopulateDatabase")
 
-package com.wanony.utils
+package com.wanony.joy.util
 
 import com.wanony.joy.data.dao.DB
 import com.wanony.joy.data.dao.Gender
