@@ -8,6 +8,7 @@ import com.wanony.dao.Groups
 import com.wanony.dao.Members
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent
 import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 
 class MemberAutocompleteProvider : AutocompleteProvider {
@@ -21,8 +22,10 @@ class MemberAutocompleteProvider : AutocompleteProvider {
     }
 
     private fun buildMemberQuery(event: CommandAutoCompleteInteractionEvent, group: String?): Query {
-        return if (group != null) {
+        return if (group != null && group != "N/A (No Group)") {
             Members.innerJoin(Groups).select { Groups.romanName eq group }
+        } else if (group == "N/A (No Group)") {
+            Members.slice(Members.romanStageName).select { Members.groupId.isNull() and (Members.romanStageName like "${event.focusedOption.value}%") }
         } else {
             Members.slice(Members.romanStageName).select { Members.romanStageName like "${event.focusedOption.value}%" }
         }
