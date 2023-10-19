@@ -69,7 +69,7 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
             }
 
             fun processLink(linkStr: String): Link {
-                val link = Link.find { Links.link eq linkStr}
+                val link = Link.find { Links.link eq linkStr }
                 return if (!link.empty()) {
                     skippedLinks++
                     link.first()
@@ -162,10 +162,7 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
 
     private fun processLink(possibleLink: String): String? {
         val pL = possibleLink.trimEnd('/')
-        return if (pL.startsWith("https://www.redgifs.com/") || pL.startsWith("https://redgifs.com/")) {
-            "https://www.redgifs.com/watch/" + pL.substringAfterLast("/")
-        }
-        else if (pL.startsWith("https://imgur.com/") ||
+        return if (pL.startsWith("https://imgur.com/") ||
                  pL.startsWith("https://www.gifdeliverynetwork.com/") ||
                  pL.startsWith("https://www.youtu") ||
                  pL.startsWith("https://i.imgur.com/") ||
