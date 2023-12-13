@@ -81,29 +81,29 @@ tasks.withType<KotlinCompile>().configureEach {
 
 tasks.register<JavaExec>("createDatabase") {
     group = "joyutils"
-    mainClass.set("com.wanony.utils.CreateDatabase")
+    mainClass.set("com.wanony.joy.data.util.CreateDatabase")
     classpath = sourceSets["main"].runtimeClasspath
 }
 
 tasks.register<JavaExec>("migrateFromOldDB") {
     group = "joyutils"
-    mainClass.set("com.wanony.utils.MigrateFromOldDatabase")
+    mainClass.set("com.wanony.joy.data.util.MigrateFromOldDatabase")
     classpath = sourceSets["main"].runtimeClasspath
 }
 
 tasks.register<JavaExec>("setupProperties") {
     group = "joyutils"
-    mainClass.set("com.wanony.utils.SetupProperties")
+    mainClass.set("com.wanony.joy.discord.util.SetupProperties")
     classpath = sourceSets["main"].runtimeClasspath
     standardInput = System.`in`
 }
 
 tasks.register<JavaExec>("populateDatabase") {
     group = "joyutils"
-    mainClass.set("com.wanony.utils.PopulateDatabase")
+    mainClass.set("com.wanony.joy.util.PopulateDatabase")
     classpath = sourceSets["webscrape"].runtimeClasspath
 }
 
 application {
-    mainClass.set("com.wanony.JoyBotKt")
+    mainClass.set("com.wanony.joy.discord.JoyBotKt")
 }
