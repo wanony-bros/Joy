@@ -16,7 +16,7 @@ class GroupAutocompleteProvider : com.wanony.joy.discord.command.AutocompletePro
     override fun provideOptions(event: CommandAutoCompleteInteractionEvent): List<String> = DB.transaction {
         val member = event.getOption("idol")?.asString
         val query = buildQuery(event, member)
-        query.limit(25).map { it[Groups.romanName] }.sorted()
+        query.limit(24).map { it[Groups.romanName] }.sorted() + "N/A (No Group)"
     }
 
     private fun buildQuery(event: CommandAutoCompleteInteractionEvent, member: String?): Query {

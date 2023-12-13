@@ -69,7 +69,7 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
             }
 
             fun processLink(linkStr: String): Link {
-                val link = Link.find { Links.link eq linkStr}
+                val link = Link.find { Links.link eq linkStr }
                 return if (!link.empty()) {
                     skippedLinks++
                     link.first()
@@ -90,13 +90,23 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
             }
             linkObjectsWithTags.forEach(::processTags)
 
-            val group = Group.find { Groups.romanName eq groupStr }
-            if (group.empty()) {
-                embedBuilder = Theme.errorEmbed("$groupStr does not exist!")
-                rollback()
-                return@transaction
+            // N/A (No Group) option added for soloist idols added, ie Members.groupId = NULL in the DB.
+            val group = if (groupStr != "N/A (No Group)") {
+                val group = Group.find { Groups.romanName eq groupStr }
+                if (group.empty()) {
+                    embedBuilder = Theme.errorEmbed("$groupStr does not exist!")
+                    rollback()
+                    return@transaction
+                }
+                group.first()
+            } else {
+                null
             }
-            val member = Member.find { (Members.romanStageName eq idol) and (Members.groupId eq group.first().id) }
+            val member = if (group != null) {
+                Member.find { (Members.romanStageName eq idol) and (Members.groupId eq group.id) }
+            } else {
+                Member.find { Members.romanStageName eq idol }
+            }
             if (member.empty()) {
                 embedBuilder = Theme.errorEmbed("$idol is not in $groupStr!")
                 rollback()
@@ -152,10 +162,7 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
 
     private fun processLink(possibleLink: String): String? {
         val pL = possibleLink.trimEnd('/')
-        return if (pL.startsWith("https://www.redgifs.com/") || pL.startsWith("https://redgifs.com/")) {
-            "https://www.redgifs.com/watch/" + pL.substringAfterLast("/")
-        }
-        else if (pL.startsWith("https://imgur.com/") ||
+        return if (pL.startsWith("https://imgur.com/") ||
                  pL.startsWith("https://www.gifdeliverynetwork.com/") ||
                  pL.startsWith("https://www.youtu") ||
                  pL.startsWith("https://i.imgur.com/") ||
@@ -172,9 +179,14 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
     }
 
     // TODO check if we should/can move it to the auditing command file
-    private fun postToAuditingChannels(link: String, user: String, userId: String, userAvatar: String, group: String, idol: String) {
+    private fun postToAuditingChannels(link: String, user: String, userId: String, userAvatar: String, group: String?, idol: String) {
+
         val detailedEmbed = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
-            this.title = "User ID: `$userId`\nGroup: `$group`\nIdol: `$idol`\nLink: $link"
+            if (group != null) {
+                this.title = "User ID: `$userId`\nGroup: `$group`\nIdol: `$idol`\nLink: $link"
+            } else {
+                this.title = "User ID: `$userId`\nSoloist Idol: `$idol`\nLink: $link"
+            }
             this.footer {
                 this.iconUrl = userAvatar
                 this.name = "Added by $user"
@@ -189,7 +201,11 @@ class AddLinkCommand(val jda: JDA) : JoyCommand {
 
         // send less detailed auditing to all auditing channels
         val authorRemovedEmbed = dev.minn.jda.ktx.messages.EmbedBuilder().apply {
-            this.title = "Group: `$group`\nIdol: `$idol`\nLink: $link"
+            if (group != null) {
+                this.title = "Group: `$group`\nIdol: `$idol`\nLink: $link"
+            } else {
+                this.title = "Soloist Idol: `$idol`\nLink: $link"
+            }
         }.build()
         val auditingChannels = DB.transaction {
             AuditingChannels.selectAll().map { it[AuditingChannels.channelId].toLong() } }
