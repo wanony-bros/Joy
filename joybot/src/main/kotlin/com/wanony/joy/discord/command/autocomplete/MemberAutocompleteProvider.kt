@@ -1,6 +1,6 @@
 package com.wanony.joy.discord.command.autocomplete
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.data.dao.Groups
 import com.wanony.joy.data.dao.Members
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent

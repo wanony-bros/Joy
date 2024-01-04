@@ -1,6 +1,6 @@
 package com.wanony.joy.discord.command.reddit
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.Theme
 import com.wanony.joy.discord.Theme.Companion.toLink
 import com.wanony.joy.discord.checkGuildReplyPermissions
