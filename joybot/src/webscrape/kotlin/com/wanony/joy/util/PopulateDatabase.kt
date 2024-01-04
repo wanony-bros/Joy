@@ -2,7 +2,7 @@
 
 package com.wanony.joy.util
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.data.dao.Gender
 import com.wanony.joy.data.dao.Group
 import com.wanony.joy.data.dao.Groups

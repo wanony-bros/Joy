@@ -1,6 +1,6 @@
 package com.wanony.joy.discord.command.memes
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.Theme
 import com.wanony.joy.data.dao.Memes
 import com.wanony.joy.discord.command.JoyCommand

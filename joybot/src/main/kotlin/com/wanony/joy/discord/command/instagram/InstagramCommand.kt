@@ -14,7 +14,7 @@ import com.github.instagram4j.instagram4j.responses.accounts.LoginResponse
 import com.github.instagram4j.instagram4j.responses.feed.FeedUserResponse
 import com.github.instagram4j.instagram4j.responses.users.UserResponse
 import com.github.instagram4j.instagram4j.utils.IGChallengeUtils
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.Theme
 import com.wanony.joy.data.dao.InstagramNotifications
 import com.wanony.joy.discord.command.JoyCommand

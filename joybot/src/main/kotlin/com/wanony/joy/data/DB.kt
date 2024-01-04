@@ -1,9 +1,12 @@
-package com.wanony.joy.data.dao
+package com.wanony.joy.data
 
 import com.wanony.joy.discord.getProperty
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Transaction
 import javax.sql.DataSource
 
 object DB {

@@ -1,6 +1,6 @@
 package com.wanony.joy.discord.command.manage
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.Theme
 import com.wanony.joy.data.dao.*
 import com.wanony.joy.discord.command.JoyCommand

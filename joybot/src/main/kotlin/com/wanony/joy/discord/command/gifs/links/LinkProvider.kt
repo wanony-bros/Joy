@@ -1,6 +1,6 @@
 package com.wanony.joy.discord.command.gifs.links
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.data.dao.*
 import org.jetbrains.exposed.sql.*
 

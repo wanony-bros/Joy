@@ -1,6 +1,6 @@
 @file:JvmName("CreateDatabase")
 
-package com.wanony.joy.data.util
+/*package com.wanony.joy.data.util
 
 import com.wanony.joy.data.dao.*
 import com.wanony.joy.discord.getProperty
@@ -65,4 +65,4 @@ fun main() {
             it[addedBy] = getProperty<Long>("wanonyId")
         }
     }
-}
+}*/

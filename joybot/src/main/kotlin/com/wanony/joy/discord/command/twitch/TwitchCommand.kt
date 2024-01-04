@@ -2,7 +2,7 @@ package com.wanony.joy.discord.command.twitch
 
 import com.github.twitch4j.TwitchClientBuilder
 import com.github.twitch4j.helix.domain.User
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.Theme
 import com.wanony.joy.data.dao.TwitchNotifications
 import com.wanony.joy.discord.command.JoyCommand

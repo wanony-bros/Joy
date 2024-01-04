@@ -1,6 +1,6 @@
 package com.wanony.joy.discord
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.discord.command.auditing.AuditingCommand
 import com.wanony.joy.discord.command.autocomplete.GroupAutocompleteProvider
 import com.wanony.joy.discord.command.autocomplete.MemberAutocompleteProvider

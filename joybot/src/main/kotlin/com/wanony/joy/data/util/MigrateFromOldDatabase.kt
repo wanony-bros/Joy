@@ -1,8 +1,8 @@
 @file:JvmName("MigrateFromOldDatabase")
 
-package com.wanony.joy.data.util
+/*package com.wanony.joy.data.util
 
-import com.wanony.joy.data.dao.DB
+import com.wanony.joy.data.DB
 import com.wanony.joy.data.dao.*
 import com.wanony.joy.discord.getProperty
 import org.jetbrains.exposed.sql.*
@@ -402,4 +402,4 @@ fun main() {
 
     println("Complete.")
 
-}
+}*/

@@ -11,17 +11,8 @@ plugins {
     application
 }
 
-
-
 group = "com.wanony"
 version = "1.0-SNAPSHOT"
-
-
-
-repositories {
-    mavenCentral()
-    maven("https://jitpack.io/")
-}
 
 val webscrape = sourceSets.create("webscrape") {
     compileClasspath += sourceSets["main"].output
@@ -40,8 +31,7 @@ dependencies {
     implementation("net.dv8tion:JDA:5.0.0-beta.13")
     implementation("com.github.minndevelopment:jda-ktx:9370cb13cc64646862e6f885959d67eb4b157e4a")
     implementation("com.zaxxer:HikariCP:4.0.3")
-    implementation("com.google.oauth-client:google-oauth-client:1.33.3")
-    implementation("com.google.oauth-client:google-oauth-client-jetty:1.33.3")
+
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
 
@@ -53,14 +43,14 @@ dependencies {
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
 
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
 
     implementation("com.github.instagram4j:instagram4j:2.0.7")
 
     implementation("com.github.twitch4j:twitch4j:1.12.0")
+    implementation(project("data"))
+    implementation(project("reddit"))
 
     add("webscrapeImplementation", "org.jsoup:jsoup:1.14.3")
     add("webscrapeImplementation", "org.seleniumhq.selenium:selenium-java:2.41.0")
