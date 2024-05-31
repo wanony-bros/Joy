@@ -62,10 +62,8 @@ fun main() {
             driver.executeScript("window.scrollTo($x, $y);")
             driver.executeScript("window.scrollBy(0, -320);")
         }
-        // for now, only support female idols
-        // driver.get("https://dbkpop.com/db/all-k-pop-idols/")
-        // TODO grab more information to fill the groups table from "https://dbkpop.com/db/k-pop-girlgroups/"
-        driver.get("https://dbkpop.com/db/k-pop-girlgroups/")
+        // add website url of your choice.
+        driver.get("") // add website here
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10))
         sleep(10000)
 
@@ -107,8 +105,8 @@ fun main() {
         }
 
 
-        // from here, add idols
-        driver.get("https://dbkpop.com/db/female-k-pop-idols/")
+        // from here, add members from a website of your choice.
+        driver.get("") // add website url of your choice here.
         sleep(10000)
 
         scroll(driver, driver.findElement(By.id("table_1")))
