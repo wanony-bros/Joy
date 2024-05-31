@@ -20,7 +20,7 @@ CREATE DATABASE Joy;
 4) (Very Optional) Download the [Gecko driver](https://github.com/mozilla/geckodriver/releases) into `<JOY_ROOT>/joybot/libs/`
    1) Only tested and verified on Windows and Mac, additional effort must be made for other operating systems.
    2) Verified working with Gecko driver version 0.31.0.
-5) (Very Optional) Run `./gradlew populateDatabase` to seed the database with groups and members from https://dbkpop.com/db/all-k-pop-idols.
+5) (Very Optional) Run `./gradlew populateDatabase` to seed the database with groups and members from a website of your choice.
    1) Since this relies on web scraping this may not be reliable.
 
 ## Running the application
